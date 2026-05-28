@@ -38,7 +38,7 @@ async def reply(chat_id: str, text: str):
 # ──────────────────────────────────────────────
 # Webhook setup
 # ──────────────────────────────────────────────
-@router.post("/setup")
+@router.get("/setup")
 async def setup_webhook():
     """Backend URL'si ile Telegram webhook'u kaydet."""
     s = get_settings()
