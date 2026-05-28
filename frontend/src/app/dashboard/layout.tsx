@@ -34,7 +34,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         balance={profile?.balance ?? 0}
         email={profile?.email || ""}
       />
-      <main className="flex-1 p-8 overflow-auto">
+      <main className="flex-1 p-4 pt-16 lg:p-8 lg:pt-8 overflow-auto min-w-0">
         {children}
       </main>
     </div>

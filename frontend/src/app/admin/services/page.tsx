@@ -77,7 +77,8 @@ export default function AdminServicesPage() {
         </div>
       ) : (
         <div className="bg-[#111] border border-white/8 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-white/8 text-white/30 text-xs uppercase">
                 <th className="px-4 py-3 text-left">Platform</th>
@@ -143,6 +144,7 @@ export default function AdminServicesPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

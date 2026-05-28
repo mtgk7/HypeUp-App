@@ -44,7 +44,7 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Özet */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
         <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4">
           <p className="text-xs text-white/30 uppercase tracking-widest mb-1">Toplam Yükleme</p>
           <p className="text-xl font-bold text-green-400">₺{total.toFixed(2)}</p>
@@ -65,7 +65,8 @@ export default function AdminPaymentsPage() {
         </div>
       ) : (
         <div className="bg-[#111] border border-white/8 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[560px]">
             <thead>
               <tr className="border-b border-white/8 text-white/30 text-xs uppercase">
                 <th className="px-4 py-3 text-left">Kullanıcı</th>
@@ -98,6 +99,7 @@ export default function AdminPaymentsPage() {
           {payments.length === 0 && (
             <p className="text-center text-white/20 py-12">Ödeme işlemi bulunamadı</p>
           )}
+          </div>
         </div>
       )}
     </div>

@@ -88,7 +88,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* KPI Kartları */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
         {kpis.map(({ label, value, icon: Icon, color, bg }) => (
           <div key={label} className={`rounded-2xl border p-5 ${bg}`}>
             <div className="flex items-center justify-between mb-3">

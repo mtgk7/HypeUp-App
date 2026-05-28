@@ -55,7 +55,8 @@ export default function OrdersPage() {
         </div>
       ) : (
         <div className="bg-[#151515] border border-white/10 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-white/10 text-white/40 text-xs uppercase">
                 <th className="px-5 py-3 text-left">Platform</th>
@@ -99,6 +100,7 @@ export default function OrdersPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

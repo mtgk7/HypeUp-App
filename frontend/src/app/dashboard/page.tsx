@@ -91,7 +91,7 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* ── İstatistikler ─────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {[
               { label: "Toplam",        value: orders.length, icon: ShoppingBag,  color: "text-blue-400" },
               { label: "Bekleyen",      value: pending,       icon: Clock,        color: "text-yellow-400" },
@@ -132,7 +132,8 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-[#111] border border-white/8 rounded-2xl overflow-hidden">
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                <table className="w-full text-sm min-w-[480px]">
                   <thead>
                     <tr className="border-b border-white/5">
                       <th className="px-5 py-3 text-left text-xs text-white/30 uppercase tracking-widest font-normal">Servis</th>
@@ -173,6 +174,7 @@ export default function DashboardPage() {
                     </Link>
                   </div>
                 )}
+                </div>
               </div>
             </div>
           )}
