@@ -28,3 +28,13 @@
 /* Gradient glow efektleri */
 .glow-purple { box-shadow: 0 0 20px rgba(139, 92, 246, 0.3); }
 .glow-green  { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+
+/* Native select/option elemanlarını dark tema ile uyumlu yap */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: #1e1b2e;
+  color: #ffffff;
+}
