@@ -5,7 +5,7 @@ import asyncio
 import logging
 
 from app.config import get_settings
-from app.routers import auth, services, orders, admin
+from app.routers import auth, services, orders, admin, payment, notifications
 from app.services.currency_service import refresh_currency_rate
 
 logging.basicConfig(level=logging.INFO)
@@ -70,6 +70,8 @@ app.include_router(auth.router,     prefix="/api/v1")
 app.include_router(services.router, prefix="/api/v1")
 app.include_router(orders.router,   prefix="/api/v1")
 app.include_router(admin.router,    prefix="/api/v1")
+app.include_router(payment.router,       prefix="/api/v1")
+app.include_router(notifications.router, prefix="/api/v1")
 
 
 @app.get("/")

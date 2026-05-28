@@ -1,7 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel, Field
 from app.models.schemas import RegisterRequest, LoginRequest, TokenResponse, UserOut
 from app.database import get_supabase
 from app.utils.auth import hash_password, verify_password, create_token, get_current_user
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str = Field(min_length=6)
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -56,6 +62,16 @@ async def login(body: LoginRequest):
         role=user["role"],
         balance=float(user["balance"]),
     )
+
+
+@router.patch("/change-password")
+async def change_password(body: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    db = get_supabase()
+    if not verify_password(body.old_password, current_user["password_hash"]):
+        raise HTTPException(status_code=400, detail="Mevcut şifre hatalı")
+    new_hash = hash_password(body.new_password)
+    db.table("users").update({"password_hash": new_hash}).eq("id", current_user["id"]).execute()
+    return {"ok": True}
 
 
 @router.get("/me", response_model=UserOut)

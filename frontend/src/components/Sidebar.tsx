@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-import { Zap, PlusCircle, List, Shield, Settings, LogOut, BarChart3, Home } from "lucide-react";
+import { Zap, PlusCircle, List, Users, Settings, LogOut, BarChart3, Home, Wallet, ShoppingBag, Package, CreditCard, User } from "lucide-react";
+import NotificationBell from "@/components/NotificationBell";
 
 interface SidebarProps {
   role?: string;
@@ -12,15 +13,20 @@ interface SidebarProps {
 }
 
 const userLinks = [
-  { href: "/dashboard",           label: "Genel Bakış",  icon: Home },
-  { href: "/dashboard/new-order", label: "Yeni Sipariş", icon: PlusCircle },
-  { href: "/dashboard/orders",    label: "Siparişlerim", icon: List },
+  { href: "/dashboard",              label: "Genel Bakış",   icon: Home },
+  { href: "/dashboard/new-order",    label: "Yeni Sipariş",  icon: PlusCircle },
+  { href: "/dashboard/orders",       label: "Siparişlerim",  icon: List },
+  { href: "/dashboard/add-balance",  label: "Bakiye Yükle",  icon: Wallet },
+  { href: "/dashboard/profile",      label: "Profilim",      icon: User },
 ];
 
 const adminLinks = [
-  { href: "/admin", label: "Dashboard", icon: BarChart3 },
-  { href: "/admin/users", label: "Kullanıcılar", icon: Shield },
-  { href: "/admin/settings", label: "Ayarlar", icon: Settings },
+  { href: "/admin",           label: "Dashboard",    icon: BarChart3 },
+  { href: "/admin/orders",    label: "Siparişler",   icon: ShoppingBag },
+  { href: "/admin/users",     label: "Kullanıcılar", icon: Users },
+  { href: "/admin/services",  label: "Servisler",    icon: Package },
+  { href: "/admin/payments",  label: "Ödemeler",     icon: CreditCard },
+  { href: "/admin/settings",  label: "Ayarlar",      icon: Settings },
 ];
 
 export default function Sidebar({ role = "user", balance = 0, email = "" }: SidebarProps) {
@@ -78,7 +84,10 @@ export default function Sidebar({ role = "user", balance = 0, email = "" }: Side
 
       {/* Kullanıcı */}
       <div className="border-t border-white/10 pt-4 mt-4">
-        <p className="text-xs text-white/30 px-3 mb-2 truncate">{email}</p>
+        <div className="flex items-center justify-between px-3 mb-2">
+          <p className="text-xs text-white/30 truncate flex-1">{email}</p>
+          {role === "user" && <NotificationBell />}
+        </div>
         <button
           onClick={logout}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-white/60 hover:text-red-400 hover:bg-red-500/10 transition w-full"

@@ -55,3 +55,24 @@ export interface AuthStore {
   setAuth: (token: string, user: User) => void;
   logout: () => void;
 }
+
+export interface AdminOrder extends Order {
+  user_email?: string;
+  user_id?: string;
+}
+
+export interface AdminService extends Service {
+  is_active: boolean;
+  jap_dolar_price: number;
+}
+
+export interface PaymentTransaction {
+  id: string;
+  user_id: string;
+  user_email?: string;
+  amount_tl: number;
+  status: "pending" | "completed" | "failed";
+  platform_order_id: string;
+  shopier_payment_id?: string;
+  created_at: string;
+}

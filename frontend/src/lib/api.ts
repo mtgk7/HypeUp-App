@@ -32,6 +32,8 @@ export const authApi = {
     api.post("/auth/register", { email, password }),
   login: (email: string, password: string) =>
     api.post("/auth/login", { email, password }),
+  changePassword: (old_password: string, new_password: string) =>
+    api.patch("/auth/change-password", { old_password, new_password }),
 };
 
 // ──────────────────────────────────────────────
@@ -62,6 +64,25 @@ export const ordersApi = {
 };
 
 // ──────────────────────────────────────────────
+// Notifications
+// ──────────────────────────────────────────────
+export const notificationsApi = {
+  list: () => api.get("/notifications/"),
+  unreadCount: () => api.get("/notifications/unread-count"),
+  markRead: (id: string) => api.patch(`/notifications/${id}/read`),
+  markAllRead: () => api.patch("/notifications/read-all"),
+};
+
+// ──────────────────────────────────────────────
+// Payment
+// ──────────────────────────────────────────────
+export const paymentApi = {
+  initShopier: (amount: number) =>
+    api.post("/payment/shopier/init", { amount }),
+  history: () => api.get("/payment/history"),
+};
+
+// ──────────────────────────────────────────────
 // Admin
 // ──────────────────────────────────────────────
 export const adminApi = {
@@ -69,6 +90,19 @@ export const adminApi = {
   users: () => api.get("/admin/users"),
   updateBalance: (user_id: string, amount: number, note?: string) =>
     api.patch("/admin/users/balance", { user_id, amount, note }),
+  toggleUser: (user_id: string) =>
+    api.patch(`/admin/users/${user_id}/toggle`),
   refreshCurrency: () => api.post("/admin/currency/refresh"),
   syncJap: () => api.post("/admin/services/sync-jap"),
+  // Siparişler
+  orders: (status?: string) =>
+    api.get("/admin/orders", { params: status ? { status } : {} }),
+  updateOrderStatus: (order_id: string, status: string) =>
+    api.patch(`/admin/orders/${order_id}/status`, { status }),
+  // Servisler
+  services: () => api.get("/admin/services"),
+  updateService: (service_id: string, data: Record<string, unknown>) =>
+    api.patch(`/admin/services/${service_id}`, data),
+  // Ödemeler
+  payments: () => api.get("/admin/payments"),
 };

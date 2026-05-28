@@ -20,6 +20,15 @@ class Settings(BaseSettings):
     # Döviz API (fallback: TCMB)
     CURRENCY_API_URL: str = "https://api.exchangerate-api.com/v4/latest/USD"
 
+    # Shopier
+    SHOPIER_API_KEY: str = ""
+    SHOPIER_API_SECRET: str = ""
+    SHOPIER_WEBSITE_INDEX: int = 1
+
+    # Uygulama URL'leri
+    BACKEND_URL: str = "http://localhost:8000"
+    FRONTEND_URL: str = "http://localhost:3000"
+
     # Uygulama
     APP_ENV: str = "development"
     ALLOWED_ORIGINS: str = "http://localhost:3000"

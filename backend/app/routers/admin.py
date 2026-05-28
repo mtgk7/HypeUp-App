@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.models.schemas import AdminStatsResponse, UserBalanceUpdate, UserOut, CurrencyRateResponse
+from app.models.schemas import AdminStatsResponse, UserBalanceUpdate, UserOut, CurrencyRateResponse, OrderStatusUpdate, ServiceUpdate
+from typing import Optional
 from app.database import get_supabase
 from app.utils.auth import require_admin
 from app.services.currency_service import refresh_currency_rate, get_current_rate
 from app.services.jap_service import get_jap_client
 from app.services.pricing_service import calculate_hypeup_price
+from app.routers.notifications import create_notification
 from datetime import datetime, timezone
 import logging
 
@@ -129,6 +131,124 @@ async def sync_jap_services(_admin: dict = Depends(require_admin)):
             skipped += 1
 
     return {"synced": synced, "skipped": skipped, "dolar_kuru": dolar_kuru}
+
+
+@router.get("/orders")
+async def list_all_orders(
+    status: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    _admin: dict = Depends(require_admin),
+):
+    """Tüm siparişler — kullanıcı e-postası ve servis adıyla birlikte."""
+    db = get_supabase()
+    query = (
+        db.table("orders")
+        .select("*, users(email), services(service_name, categories(platform_name))")
+        .order("created_at", desc=True)
+        .limit(limit)
+        .offset(offset)
+    )
+    if status:
+        query = query.eq("status", status)
+
+    result = query.execute()
+    orders = []
+    for row in result.data:
+        user = row.pop("users", {}) or {}
+        svc  = row.pop("services", {}) or {}
+        cat  = (svc.get("categories") or {})
+        orders.append({
+            **row,
+            "user_email":   user.get("email"),
+            "service_name": svc.get("service_name"),
+            "platform_name": cat.get("platform_name"),
+        })
+    return orders
+
+
+@router.patch("/orders/{order_id}/status")
+async def update_order_status(order_id: str, body: OrderStatusUpdate, _admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    order_result = db.table("orders").select("user_id, quantity, services(service_name)").eq("id", order_id).limit(1).execute()
+    if not order_result.data:
+        raise HTTPException(status_code=404, detail="Sipariş bulunamadı")
+
+    order = order_result.data[0]
+    result = db.table("orders").update({"status": body.status}).eq("id", order_id).execute()
+
+    STATUS_NOTIF = {
+        "completed":  ("Siparişin Tamamlandı ✅", "info", "success"),
+        "cancelled":  ("Siparişin İptal Edildi", "Siparişin iptal edildi.", "error"),
+        "refunded":   ("İade Yapıldı", "Siparişin iade edildi, bakiyen güncellendi.", "info"),
+        "processing": ("Siparişin İşleme Alındı", "Siparişin işleme alındı.", "info"),
+    }
+    if body.status in STATUS_NOTIF:
+        svc_name = (order.get("services") or {}).get("service_name", "Sipariş")
+        title_tpl, msg_tpl, notif_type = STATUS_NOTIF[body.status]
+        if body.status == "completed":
+            msg = f"{svc_name} için {order['quantity']:,} adet siparişin tamamlandı."
+        else:
+            msg = msg_tpl
+        create_notification(order["user_id"], title_tpl, msg, notif_type)
+
+    return result.data[0]
+
+
+@router.get("/services")
+async def list_all_services(_admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    result = (
+        db.table("services")
+        .select("*, categories(platform_name, category_name)")
+        .order("platform_name")
+        .execute()
+    )
+    services = []
+    for row in result.data:
+        cat = row.pop("categories", {}) or {}
+        services.append({**row, "platform_name": cat.get("platform_name"), "category_name": cat.get("category_name")})
+    return services
+
+
+@router.patch("/services/{service_id}")
+async def update_service(service_id: str, body: ServiceUpdate, _admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    update_data = body.model_dump(exclude_none=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Güncellenecek alan yok")
+    result = db.table("services").update(update_data).eq("id", service_id).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Servis bulunamadı")
+    return result.data[0]
+
+
+@router.get("/payments")
+async def list_all_payments(_admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    result = (
+        db.table("payment_transactions")
+        .select("*, users(email)")
+        .order("created_at", desc=True)
+        .limit(200)
+        .execute()
+    )
+    payments = []
+    for row in result.data:
+        user = row.pop("users", {}) or {}
+        payments.append({**row, "user_email": user.get("email")})
+    return payments
+
+
+@router.patch("/users/{user_id}/toggle")
+async def toggle_user_status(user_id: str, _admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    result = db.table("users").select("is_active").eq("id", user_id).limit(1).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    new_status = not result.data[0]["is_active"]
+    updated = db.table("users").update({"is_active": new_status}).eq("id", user_id).execute()
+    return UserOut(**updated.data[0])
 
 
 def _guess_platform(name: str) -> str:

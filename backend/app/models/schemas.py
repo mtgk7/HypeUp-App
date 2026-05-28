@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Literal
+from typing import Optional, Literal, Any
 from datetime import datetime
 import uuid
 
@@ -126,3 +126,42 @@ class CurrencyRateResponse(BaseModel):
     rate: float
     source: str
     updated_at: datetime
+
+
+# ──────────────────────────────────────────────
+# PAYMENT
+# ──────────────────────────────────────────────
+
+class PaymentInitRequest(BaseModel):
+    amount: float = Field(gt=9, lt=10001, description="Yüklenecek TL miktarı (min 10, max 10000)")
+
+
+class PaymentInitResponse(BaseModel):
+    shopier_url: str
+    form_fields: dict
+    platform_order_id: str
+
+
+class PaymentTransactionOut(BaseModel):
+    id: str
+    amount_tl: float
+    status: Literal["pending", "completed", "failed"]
+    platform_order_id: str
+    shopier_payment_id: Optional[str] = None
+    created_at: datetime
+
+
+# ──────────────────────────────────────────────
+# ADMIN — EXTRA
+# ──────────────────────────────────────────────
+
+class OrderStatusUpdate(BaseModel):
+    status: Literal["pending", "processing", "completed", "cancelled", "refunded"]
+
+
+class ServiceUpdate(BaseModel):
+    service_name: Optional[str] = None
+    hypeup_tl_price: Optional[float] = None
+    min_order: Optional[int] = None
+    max_order: Optional[int] = None
+    is_active: Optional[bool] = None
