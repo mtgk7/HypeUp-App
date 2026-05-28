@@ -3,9 +3,8 @@ Dinamik Kâr Marjı Motoru
 ────────────────────────
 Kural: 1000 adet TL maliyeti baz alınır.
 
-  < 1 TL       → maliyet × 40   (izlenme gibi ucuz servisler)
-  1 – 20 TL    → maliyet × 4    (takipçi/beğeni standart)
-  > 20 TL      → maliyet × 2.5  (YouTube abone vb. pahalı)
+  < 1 TL   → maliyet × 5   (%400 kâr — izlenme/beğeni gibi ucuz servisler)
+  ≥ 1 TL   → maliyet × 4   (%300 kâr — takipçi, abone vb.)
 """
 
 from app.services.currency_service import get_current_rate
@@ -27,12 +26,7 @@ def calculate_hypeup_price(jap_dolar_per_1000: float, dolar_kuru: float | None =
 
     cost_tl_per_1000 = jap_dolar_per_1000 * dolar_kuru
 
-    if cost_tl_per_1000 < 1.0:
-        multiplier = 40
-    elif cost_tl_per_1000 <= 20.0:
-        multiplier = 4
-    else:
-        multiplier = 2.5
+    multiplier = 5 if cost_tl_per_1000 < 1.0 else 4
 
     return round(cost_tl_per_1000 * multiplier, 4)
 
