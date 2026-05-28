@@ -5,6 +5,7 @@ export interface User {
   role: "admin" | "user";
   is_active: boolean;
   created_at: string;
+  referral_code?: string;
 }
 
 export interface Category {
