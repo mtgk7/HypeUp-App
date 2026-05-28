@@ -1,13 +1,16 @@
 """
 Dinamik Kâr Marjı Motoru
 ────────────────────────
-Kural: 1000 adet TL maliyeti baz alınır.
+Kural: 1000 adet TL maliyeti baz alınır. Minimum taban fiyat: 5 TL/1000.
 
-  < 1 TL   → maliyet × 5   (%400 kâr — izlenme/beğeni gibi ucuz servisler)
-  ≥ 1 TL   → maliyet × 4   (%300 kâr — takipçi, abone vb.)
+  < 1 TL   → maks(maliyet × 30, 5 TL)   (izlenme/beğeni — taban fiyat garantisi)
+  1–20 TL  → maliyet × 5                 (%400 kâr)
+  > 20 TL  → maliyet × 4                 (%300 kâr)
 """
 
 from app.services.currency_service import get_current_rate
+
+MIN_PRICE_TL = 5.0  # 1000 adet için minimum satış fiyatı (TL)
 
 
 def calculate_hypeup_price(jap_dolar_per_1000: float, dolar_kuru: float | None = None) -> float:
@@ -26,9 +29,14 @@ def calculate_hypeup_price(jap_dolar_per_1000: float, dolar_kuru: float | None =
 
     cost_tl_per_1000 = jap_dolar_per_1000 * dolar_kuru
 
-    multiplier = 5 if cost_tl_per_1000 < 1.0 else 4
+    if cost_tl_per_1000 < 1.0:
+        price = max(cost_tl_per_1000 * 30, MIN_PRICE_TL)
+    elif cost_tl_per_1000 <= 20.0:
+        price = cost_tl_per_1000 * 5
+    else:
+        price = cost_tl_per_1000 * 4
 
-    return round(cost_tl_per_1000 * multiplier, 4)
+    return round(price, 4)
 
 
 # Türkçe alias — services.py router'ında kullanılır
