@@ -16,7 +16,8 @@ from typing import Optional, List
 # key: jap_service_id  value: [{min, max, price_per_1000}]
 # ──────────────────────────────────────────────────────────────
 SERVICE_TIERS: dict[int, List[dict]] = {
-    47: [  # IG Türk Takipçi
+
+    47: [  # IG Türk Takipçi (TakipciBudur x0.90)
         {"min": 25,    "max": 49,    "price_per_1000": 2520.0},
         {"min": 50,    "max": 74,    "price_per_1000": 2520.0},
         {"min": 75,    "max": 99,    "price_per_1000": 2160.0},
@@ -37,6 +38,138 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 20000, "max": 49999, "price_per_1000":  837.0},
         {"min": 50000, "max": 100000,"price_per_1000":  765.0},
     ],
+
+    8216: [  # IG Beğeni (TakipciBudur Türk Beğeni x0.90)
+        {"min": 25,    "max": 49,    "price_per_1000":  720.0},
+        {"min": 50,    "max": 99,    "price_per_1000":  630.0},
+        {"min": 100,   "max": 249,   "price_per_1000":  585.0},
+        {"min": 250,   "max": 499,   "price_per_1000":  288.0},
+        {"min": 500,   "max": 749,   "price_per_1000":  243.0},
+        {"min": 750,   "max": 999,   "price_per_1000":  180.0},
+        {"min": 1000,  "max": 1499,  "price_per_1000":  171.0},
+        {"min": 1500,  "max": 2499,  "price_per_1000":  150.0},
+        {"min": 2500,  "max": 4999,  "price_per_1000":  107.6},
+        {"min": 5000,  "max": 9999,  "price_per_1000":   99.0},
+        {"min": 10000, "max": 19999, "price_per_1000":   89.9},
+        {"min": 20000, "max": 49999, "price_per_1000":   78.75},
+        {"min": 50000, "max": 99999, "price_per_1000":   67.5},
+        {"min": 100000,"max": 200000,"price_per_1000":   58.5},
+    ],
+
+    5994: [  # IG Reels İzlenme (TakipciBudur Reels İzlenme x0.90)
+        {"min": 1000,   "max": 2499,   "price_per_1000":  31.5},
+        {"min": 2500,   "max": 4999,   "price_per_1000":  19.8},
+        {"min": 5000,   "max": 9999,   "price_per_1000":  16.2},
+        {"min": 10000,  "max": 19999,  "price_per_1000":  15.75},
+        {"min": 20000,  "max": 29999,  "price_per_1000":  12.83},
+        {"min": 30000,  "max": 49999,  "price_per_1000":  10.5},
+        {"min": 50000,  "max": 74999,  "price_per_1000":   8.55},
+        {"min": 75000,  "max": 99999,  "price_per_1000":   6.54},
+        {"min": 100000, "max": 199999, "price_per_1000":   6.53},
+        {"min": 200000, "max": 499999, "price_per_1000":   4.5},
+        {"min": 500000, "max": 999999, "price_per_1000":   2.7},
+        {"min": 1000000,"max": 5000000,"price_per_1000":   1.8},
+    ],
+
+    3519: [  # YouTube Abone (TakipciBudur YT Abone x0.90)
+        {"min": 100,  "max": 199,  "price_per_1000": 4500.0},
+        {"min": 200,  "max": 499,  "price_per_1000": 4275.0},
+        {"min": 500,  "max": 15999,"price_per_1000": 4500.0},
+        {"min": 16000,"max": 19999,"price_per_1000": 4500.0},
+        {"min": 20000,"max": 25000,"price_per_1000": 7200.0},
+    ],
+
+    7533: [  # YouTube İzlenme (TakipciBudur YT İzlenme x0.90)
+        {"min": 1000,  "max": 1999,  "price_per_1000":  180.0},
+        {"min": 2000,  "max": 2999,  "price_per_1000":  135.0},
+        {"min": 3000,  "max": 3999,  "price_per_1000":  120.0},
+        {"min": 4000,  "max": 4999,  "price_per_1000":  112.5},
+        {"min": 5000,  "max": 9999,  "price_per_1000":  108.0},
+        {"min": 10000, "max": 14999, "price_per_1000":   99.0},
+        {"min": 15000, "max": 19999, "price_per_1000":  102.0},
+        {"min": 20000, "max": 99999, "price_per_1000":   99.0},
+        {"min": 100000,"max": 199999,"price_per_1000":   89.1},
+        {"min": 200000,"max": 300000,"price_per_1000":   67.5},
+    ],
+
+    8695: [  # X (Twitter) Takipci (TakipciBudur Türk Takipçi x0.90)
+        {"min": 10,   "max": 24,    "price_per_1000": 3600.0},
+        {"min": 25,   "max": 99,    "price_per_1000": 2880.0},
+        {"min": 100,  "max": 299,   "price_per_1000": 2880.0},
+        {"min": 300,  "max": 399,   "price_per_1000": 2850.0},
+        {"min": 400,  "max": 499,   "price_per_1000": 2813.0},
+        {"min": 500,  "max": 999,   "price_per_1000": 2700.0},
+        {"min": 1000, "max": 1000000,"price_per_1000": 2610.0},
+    ],
+
+    9393: [  # X (Twitter) Beğeni (TakipciBudur Türk Beğeni x0.90)
+        {"min": 10,  "max": 24,  "price_per_1000": 2250.0},
+        {"min": 25,  "max": 49,  "price_per_1000": 1800.0},
+        {"min": 50,  "max": 74,  "price_per_1000": 1620.0},
+        {"min": 75,  "max": 99,  "price_per_1000": 1500.0},
+        {"min": 100, "max": 149, "price_per_1000": 1575.0},
+        {"min": 150, "max": 199, "price_per_1000": 1350.0},
+        {"min": 200, "max": 249, "price_per_1000": 1125.0},
+        {"min": 250, "max": 299, "price_per_1000": 1242.0},
+        {"min": 300, "max": 499, "price_per_1000": 1275.0},
+        {"min": 500, "max": 749, "price_per_1000": 1215.0},
+        {"min": 750, "max": 10000,"price_per_1000": 1170.0},
+    ],
+
+    10055: [  # TikTok Takipçi (TakipciBudur x0.90)
+        {"min": 50,   "max": 99,   "price_per_1000": 1170.0},
+        {"min": 100,  "max": 249,  "price_per_1000": 1080.0},
+        {"min": 250,  "max": 499,  "price_per_1000":  720.0},
+        {"min": 500,  "max": 999,  "price_per_1000":  675.0},
+        {"min": 1000, "max": 2499, "price_per_1000":  495.0},
+        {"min": 2500, "max": 4999, "price_per_1000":  522.0},
+        {"min": 5000, "max": 7499, "price_per_1000":  495.0},
+        {"min": 7500, "max": 9999, "price_per_1000":  360.0},
+        {"min": 10000,"max": 19999,"price_per_1000":  450.0},
+        {"min": 20000,"max": 49999,"price_per_1000":  405.0},
+        {"min": 50000,"max": 100000,"price_per_1000": 324.0},
+    ],
+
+    10023: [  # TikTok Beğeni (TakipciBudur x0.90)
+        {"min": 100,   "max": 249,   "price_per_1000":  270.0},
+        {"min": 250,   "max": 499,   "price_per_1000":  216.0},
+        {"min": 500,   "max": 999,   "price_per_1000":  162.0},
+        {"min": 1000,  "max": 2499,  "price_per_1000":  108.0},
+        {"min": 2500,  "max": 9999,  "price_per_1000":   63.0},
+        {"min": 10000, "max": 19999, "price_per_1000":   54.0},
+        {"min": 20000, "max": 49999, "price_per_1000":   45.0},
+        {"min": 50000, "max": 5000000,"price_per_1000":  36.0},
+    ],
+
+    10019: [  # TikTok Video İzlenme (TakipciBudur x0.90)
+        {"min": 1000,   "max": 2499,   "price_per_1000":  31.5},
+        {"min": 2500,   "max": 4999,   "price_per_1000":  18.0},
+        {"min": 5000,   "max": 7499,   "price_per_1000":  16.2},
+        {"min": 7500,   "max": 9999,   "price_per_1000":  14.4},
+        {"min": 10000,  "max": 24999,  "price_per_1000":  15.75},
+        {"min": 25000,  "max": 49999,  "price_per_1000":  10.6},
+        {"min": 50000,  "max": 99999,  "price_per_1000":   9.0},
+        {"min": 100000, "max": 249999, "price_per_1000":   6.75},
+        {"min": 250000, "max": 499999, "price_per_1000":   3.6},
+        {"min": 500000, "max": 749999, "price_per_1000":   2.7},
+        {"min": 750000, "max": 999999, "price_per_1000":   2.4},
+        {"min": 1000000,"max": 10000000,"price_per_1000":  2.25},
+    ],
+
+    10216: [  # IG Global Takipçi (TakipciBudur Ucuz Yabancı x0.90)
+        {"min": 100,  "max": 499,  "price_per_1000":  765.0},
+        {"min": 500,  "max": 749,  "price_per_1000":  630.0},
+        {"min": 750,  "max": 999,  "price_per_1000":  570.0},
+        {"min": 1000, "max": 1499, "price_per_1000":  585.0},
+        {"min": 1500, "max": 1999, "price_per_1000":  510.0},
+        {"min": 2000, "max": 2499, "price_per_1000":  427.5},
+        {"min": 2500, "max": 9999, "price_per_1000":  450.0},
+        {"min": 10000,"max": 14999,"price_per_1000":  351.0},
+        {"min": 15000,"max": 19999,"price_per_1000":  384.0},
+        {"min": 20000,"max": 29999,"price_per_1000":  576.0},
+        {"min": 30000,"max": 1000000,"price_per_1000": 540.0},
+    ],
+
 }
 
 
