@@ -19,6 +19,31 @@ JAP_URL = os.getenv("JAP_API_URL", "https://justanotherpanel.com/api/v2")
 JAP_KEY = os.getenv("JAP_API_KEY", "YOUR_JAP_API_KEY")
 
 
+# --- 0. PUBLIC — Auth gerektirmez, landing page için ---
+@router.get("/public")
+async def list_public_services():
+    """Giriş gerektirmez. Landing page servis + fiyat listesi için."""
+    supabase = get_supabase_client()
+    result = (
+        supabase.table("services")
+        .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name)")
+        .eq("is_active", True)
+        .execute()
+    )
+    services = []
+    for svc in (result.data or []):
+        cat = svc.pop("categories", {}) or {}
+        services.append({
+            "id":              svc["id"],
+            "service_name":    svc["service_name"],
+            "hypeup_tl_price": float(svc["hypeup_tl_price"]),
+            "min_order":       svc["min_order"],
+            "max_order":       svc["max_order"],
+            "platform_name":   cat.get("platform_name", ""),
+        })
+    return services
+
+
 # --- 1. MÜŞTERİNİN GÖRECEĞİ AKTİF SERVİSLERİ LİSTELEME ---
 @router.get("/list")
 async def list_services(_user: dict = Depends(get_current_user)):

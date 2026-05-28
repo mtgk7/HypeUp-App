@@ -51,6 +51,7 @@ export const servicesApi = {
     api.get("/services/list", { params: platform ? { platform } : {} }),
   calculatePrice: (service_id: string, quantity: number) =>
     api.post("/services/price", { service_id, quantity }),
+  public: () => api.get("/services/public"),
 };
 
 // ──────────────────────────────────────────────
