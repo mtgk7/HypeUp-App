@@ -65,7 +65,7 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
 
     order = order_insert.data[0]
 
-    # 7. JAP'a sipariş gönder (hata olursa rollback)
+    # 7. JAP'a sipariş gönder (hata olursa bakiye iade + iptal)
     try:
         jap = get_jap_client()
         jap_response = await jap.add_order(
@@ -85,9 +85,16 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
         order["status"] = "processing"
 
     except Exception as e:
-        logger.error(f"[Orders] JAP hatası, sipariş pending'de kalıyor: {e}")
-        # Bakiye iade edilmez - admin inceleyecek.
-        # Dilerseniz burada bakiyeyi iade edip cancelled yapabilirsiniz.
+        logger.error(f"[Orders] JAP hatası, bakiye iade ediliyor: {e}")
+        # Bakiyeyi iade et
+        db.table("users").update({"balance": user_balance}).eq("id", user["id"]).execute()
+        # Siparişi iptal et
+        db.table("orders").update({"status": "cancelled"}).eq("id", order["id"]).execute()
+        order["status"] = "cancelled"
+        raise HTTPException(
+            status_code=502,
+            detail="Sipariş sağlayıcıya iletilemedi, bakiyeniz iade edildi. Lütfen tekrar deneyin."
+        )
 
     cat = svc.get("categories") or {}
     return OrderOut(
