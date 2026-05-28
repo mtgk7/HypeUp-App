@@ -5,7 +5,7 @@ import asyncio
 import logging
 
 from app.config import get_settings
-from app.routers import auth, services, orders, admin, payment, notifications
+from app.routers import auth, services, orders, admin, payment, notifications, telegram_bot
 from app.services.currency_service import refresh_currency_rate
 from app.services.jap_sync_service import sync_order_statuses
 
@@ -84,7 +84,8 @@ app.include_router(services.router, prefix="/api/v1")
 app.include_router(orders.router,   prefix="/api/v1")
 app.include_router(admin.router,    prefix="/api/v1")
 app.include_router(payment.router,       prefix="/api/v1")
-app.include_router(notifications.router, prefix="/api/v1")
+app.include_router(notifications.router,  prefix="/api/v1")
+app.include_router(telegram_bot.router,   prefix="/api/v1")
 
 
 @app.get("/")
