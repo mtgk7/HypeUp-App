@@ -16,4 +16,4 @@ services:
       - key: JAP_API_KEY
         sync: false
       - key: ALLOWED_ORIGINS
-        value: https://hypeuppp.vercel.app,https://frontend-gokbukmert-6873s-projects.vercel.app,https://frontend-okyol9jv4-gokbukmert-6873s-projects.vercel.app,http://localhost:3000
+        value: https://hypeuppp.vercel.app,https://frontend-gokbukmert-6873s-projects.vercel.app,https://frontend-hy1imm2di-gokbukmert-6873s-projects.vercel.app,http://localhost:3000
