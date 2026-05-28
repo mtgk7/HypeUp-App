@@ -151,7 +151,8 @@ export default function LandingPage() {
                   <div key={i} className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
                     <span className="text-xs text-white/70 truncate max-w-[160px]">{s.service_name}</span>
                     <span className="text-xs font-bold text-white shrink-0 ml-2">
-                      ₺{(s.hypeup_tl_price / 1000).toFixed(3)}<span className="text-white/30 font-normal">/adet</span>
+                      ₺{((s.hypeup_tl_price / 1000) * s.min_order).toFixed(2)}
+                      <span className="text-white/30 font-normal">/{s.min_order.toLocaleString()}ad</span>
                     </span>
                   </div>
                 ))
@@ -230,8 +231,7 @@ export default function LandingPage() {
             <>
               <div className="divide-y divide-white/5">
                 {displayed.map((s) => {
-                  const unitPrice = s.hypeup_tl_price / 1000;
-                  const minTotal = unitPrice * s.min_order;
+                  const minTotal = (s.hypeup_tl_price / 1000) * s.min_order;
                   return (
                     <div key={s.id} className="flex items-center justify-between px-6 py-4 hover:bg-white/2 transition group">
                       <div className="flex items-center gap-3 min-w-0">
@@ -240,15 +240,13 @@ export default function LandingPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-white/90 truncate">{s.service_name}</p>
-                          <p className="text-xs text-white/30 mt-0.5">
-                            Min {s.min_order.toLocaleString()} adet · ₺{unitPrice.toFixed(4)}/adet
-                          </p>
+                          <p className="text-xs text-white/30 mt-0.5">Min {s.min_order.toLocaleString()} adet</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 shrink-0 ml-3">
                         <div className="text-right">
-                          <p className="font-bold text-white text-sm">₺{s.hypeup_tl_price.toFixed(2)}</p>
-                          <p className="text-[10px] text-white/30">/ 1000 adet</p>
+                          <p className="font-bold text-white text-sm">₺{minTotal.toFixed(2)}</p>
+                          <p className="text-[10px] text-white/30">/ {s.min_order.toLocaleString()} adet</p>
                         </div>
                         <Link href="/register"
                           className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition hidden sm:block opacity-0 group-hover:opacity-100">
