@@ -25,6 +25,13 @@ class Settings(BaseSettings):
     SHOPIER_API_SECRET: str = ""
     SHOPIER_WEBSITE_INDEX: int = 1
 
+    # Telegram
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_CHAT_ID: str = ""
+
+    # Referans sistemi
+    REFERRAL_BONUS_TL: float = 25.0
+
     # Uygulama URL'leri
     BACKEND_URL: str = "http://localhost:8000"
     FRONTEND_URL: str = "http://localhost:3000"

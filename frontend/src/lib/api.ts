@@ -28,8 +28,8 @@ api.interceptors.response.use(
 // Auth
 // ──────────────────────────────────────────────
 export const authApi = {
-  register: (email: string, password: string) =>
-    api.post("/auth/register", { email, password }),
+  register: (email: string, password: string, ref_code?: string) =>
+    api.post("/auth/register", { email, password, ref_code }),
   login: (email: string, password: string) =>
     api.post("/auth/login", { email, password }),
   changePassword: (old_password: string, new_password: string) =>
@@ -87,6 +87,7 @@ export const paymentApi = {
 // ──────────────────────────────────────────────
 export const adminApi = {
   stats: () => api.get("/admin/stats"),
+  chart: (days?: number) => api.get("/admin/stats/chart", { params: days ? { days } : {} }),
   users: () => api.get("/admin/users"),
   updateBalance: (user_id: string, amount: number, note?: string) =>
     api.patch("/admin/users/balance", { user_id, amount, note }),

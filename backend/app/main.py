@@ -7,6 +7,7 @@ import logging
 from app.config import get_settings
 from app.routers import auth, services, orders, admin, payment, notifications
 from app.services.currency_service import refresh_currency_rate
+from app.services.jap_sync_service import sync_order_statuses
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -24,7 +25,17 @@ async def currency_refresh_loop():
             logger.info(f"[Scheduler] Döviz kuru güncellendi: {rate}")
         except Exception as e:
             logger.error(f"[Scheduler] Kur güncelleme hatası: {e}")
-        await asyncio.sleep(60 * 60 * 24)  # 24 saat
+        await asyncio.sleep(60 * 60 * 24)
+
+
+async def jap_sync_loop():
+    """Her saat JAP sipariş durumlarını senkronize et."""
+    while True:
+        await asyncio.sleep(60 * 60)  # İlk çalışma 1 saat sonra
+        try:
+            await sync_order_statuses()
+        except Exception as e:
+            logger.error(f"[Scheduler] JAP sync hatası: {e}")
 
 
 @asynccontextmanager
@@ -36,12 +47,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"[Startup] Döviz kuru alınamadı: {e}")
 
-    # Arka plan görev
-    task = asyncio.create_task(currency_refresh_loop())
+    # Arka plan görevler
+    task1 = asyncio.create_task(currency_refresh_loop())
+    task2 = asyncio.create_task(jap_sync_loop())
 
     yield
 
-    task.cancel()
+    task1.cancel()
+    task2.cancel()
 
 
 # ──────────────────────────────────────────────

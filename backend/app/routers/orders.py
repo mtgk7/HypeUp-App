@@ -5,6 +5,7 @@ from app.utils.auth import get_current_user
 from app.services.jap_service import get_jap_client
 from app.services.pricing_service import calculate_order_cost, get_tier_price
 from app.services.currency_service import get_current_rate
+from app.services.telegram_service import send_telegram
 from datetime import datetime, timezone
 import logging
 
@@ -99,6 +100,16 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
         )
 
     cat = svc.get("categories") or {}
+
+    # Telegram bildirimi
+    await send_telegram(
+        f"🛒 <b>Yeni Sipariş</b>\n"
+        f"👤 {user['email']}\n"
+        f"📦 {svc.get('service_name', '?')} ({cat.get('platform_name', '?')})\n"
+        f"🔢 {body.quantity:,} adet\n"
+        f"💰 ₺{charge_tl:.2f}"
+    )
+
     return OrderOut(
         **order,
         service_name=svc.get("service_name"),

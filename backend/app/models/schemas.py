@@ -11,6 +11,7 @@ import uuid
 class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
+    ref_code: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
@@ -24,6 +25,7 @@ class TokenResponse(BaseModel):
     user_id: str
     role: str
     balance: float
+    referral_code: Optional[str] = None
 
 
 # ──────────────────────────────────────────────
@@ -37,6 +39,7 @@ class UserOut(BaseModel):
     role: str
     is_active: bool
     created_at: datetime
+    referral_code: Optional[str] = None
 
 
 class UserBalanceUpdate(BaseModel):

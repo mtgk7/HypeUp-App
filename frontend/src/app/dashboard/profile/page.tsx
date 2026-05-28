@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { usersApi, ordersApi, authApi } from "@/lib/api";
 import { User, Order } from "@/types";
-import { User as UserIcon, Mail, Wallet, ShoppingBag, Calendar, Lock, Loader2, Check, Eye, EyeOff } from "lucide-react";
+import { User as UserIcon, Wallet, ShoppingBag, Calendar, Lock, Loader2, Check, Eye, EyeOff, Copy, Users } from "lucide-react";
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<User | null>(null);
@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const [showNew, setShowNew] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [pwMsg, setPwMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     Promise.all([usersApi.me(), ordersApi.list()])
@@ -58,6 +59,16 @@ export default function ProfilePage() {
   const totalSpent = orders.reduce((s, o) => s + o.charge_tl, 0);
   const completed  = orders.filter(o => o.status === "completed").length;
   const memberSince = profile ? new Date(profile.created_at).toLocaleDateString("tr-TR") : "—";
+  const refLink = profile?.referral_code
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://hypeuppp.vercel.app"}/register?ref=${profile.referral_code}`
+    : null;
+
+  function copyRefLink() {
+    if (!refLink) return;
+    navigator.clipboard.writeText(refLink);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div className="max-w-2xl">
@@ -104,6 +115,33 @@ export default function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Referans Sistemi */}
+      {refLink && (
+        <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4">
+          <h2 className="font-semibold flex items-center gap-2 mb-1">
+            <Users className="w-4 h-4 text-violet-400" />
+            Arkadaşını Davet Et
+          </h2>
+          <p className="text-xs text-white/30 mb-4">
+            Davet ettiğin her kişi kayıt olduğunda <span className="text-green-400 font-semibold">+₺25</span> bonus kazanırsın. Arkadaşın da <span className="text-green-400 font-semibold">+₺25</span> ekstra alır.
+          </p>
+          <div className="flex gap-2">
+            <input
+              readOnly
+              value={refLink}
+              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/60 truncate"
+            />
+            <button onClick={copyRefLink}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition ${
+                copied ? "bg-green-600/20 border border-green-500/30 text-green-400" : "bg-violet-600/20 border border-violet-500/30 text-violet-400 hover:bg-violet-600/30"
+              }`}>
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              {copied ? "Kopyalandı!" : "Kopyala"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Şifre Değiştir */}
       <div className="bg-[#111] border border-white/8 rounded-2xl p-6">

@@ -5,6 +5,7 @@ from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.config import get_settings
 from app.routers.notifications import create_notification
+from app.services.telegram_service import send_telegram
 import hmac
 import hashlib
 import base64
@@ -128,6 +129,11 @@ async def shopier_callback(request: Request):
             "Bakiye Yüklendi 💰",
             f"₺{float(tx['amount_tl']):.2f} bakiyenize başarıyla yüklendi.",
             "success",
+        )
+        await send_telegram(
+            f"💰 <b>Bakiye Yükleme</b>\n"
+            f"💳 ₺{float(tx['amount_tl']):.2f} ödeme alındı\n"
+            f"🆔 {platform_order_id}"
         )
         logger.info(f"[Payment] Başarılı: {platform_order_id} — {tx['amount_tl']} TL")
     else:

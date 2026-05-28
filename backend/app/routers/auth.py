@@ -3,6 +3,9 @@ from pydantic import BaseModel, Field
 from app.models.schemas import RegisterRequest, LoginRequest, TokenResponse, UserOut
 from app.database import get_supabase
 from app.utils.auth import hash_password, verify_password, create_token, get_current_user
+from app.config import get_settings
+from app.routers.notifications import create_notification
+import secrets
 
 
 class ChangePasswordRequest(BaseModel):
@@ -15,26 +18,56 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/register", response_model=TokenResponse, status_code=201)
 async def register(body: RegisterRequest):
     db = get_supabase()
+    s = get_settings()
 
-    # Email daha önce alınmış mı?
     existing = db.table("users").select("id").eq("email", body.email).execute()
     if existing.data:
         raise HTTPException(status_code=409, detail="Bu e-posta zaten kayıtlı")
 
-    # Kullanıcı oluştur (DB trigger 50 TL bakiye ekler)
+    # Referans kodu kontrol
+    referrer_id = None
+    if body.ref_code:
+        ref_result = db.table("users").select("id").eq("referral_code", body.ref_code).limit(1).execute()
+        if ref_result.data:
+            referrer_id = ref_result.data[0]["id"]
+
+    new_ref_code = secrets.token_hex(4)  # 8 karakter benzersiz kod
+
     new_user = db.table("users").insert({
         "email": body.email,
         "password_hash": hash_password(body.password),
+        "referral_code": new_ref_code,
+        "referred_by": referrer_id,
     }).execute()
 
     user = new_user.data[0]
-    token = create_token(user["id"], user["role"])
+    current_balance = float(user["balance"])
 
+    # Referans bonusu
+    if referrer_id:
+        bonus = s.REFERRAL_BONUS_TL
+        # Yeni kullanıcıya bonus
+        current_balance = round(current_balance + bonus, 2)
+        db.table("users").update({"balance": current_balance}).eq("id", user["id"]).execute()
+        # Referans verene bonus
+        ref_user = db.table("users").select("balance").eq("id", referrer_id).limit(1).execute()
+        if ref_user.data:
+            new_ref_balance = round(float(ref_user.data[0]["balance"]) + bonus, 2)
+            db.table("users").update({"balance": new_ref_balance}).eq("id", referrer_id).execute()
+            create_notification(
+                referrer_id,
+                "Referans Bonusu 🎉",
+                f"Davet ettiğin kişi kayıt oldu! ₺{bonus:.0f} bonus hesabına eklendi.",
+                "success",
+            )
+
+    token = create_token(user["id"], user["role"])
     return TokenResponse(
         access_token=token,
         user_id=user["id"],
         role=user["role"],
-        balance=float(user["balance"]),
+        balance=current_balance,
+        referral_code=new_ref_code,
     )
 
 

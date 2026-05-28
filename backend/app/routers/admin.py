@@ -7,7 +7,8 @@ from app.services.currency_service import refresh_currency_rate, get_current_rat
 from app.services.jap_service import get_jap_client
 from app.services.pricing_service import calculate_hypeup_price
 from app.routers.notifications import create_notification
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from collections import defaultdict
 import logging
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
@@ -131,6 +132,41 @@ async def sync_jap_services(_admin: dict = Depends(require_admin)):
             skipped += 1
 
     return {"synced": synced, "skipped": skipped, "dolar_kuru": dolar_kuru}
+
+
+@router.get("/stats/chart")
+async def stats_chart(days: int = 14, _admin: dict = Depends(require_admin)):
+    """Son N günün günlük gelir, sipariş sayısı ve yükleme verisi."""
+    db = get_supabase()
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+    orders_res   = db.table("orders").select("created_at, charge_tl").gte("created_at", since).execute()
+    payments_res = db.table("payment_transactions").select("created_at, amount_tl").eq("status", "completed").gte("created_at", since).execute()
+
+    daily_revenue  = defaultdict(float)
+    daily_orders   = defaultdict(int)
+    daily_deposits = defaultdict(float)
+
+    for o in (orders_res.data or []):
+        d = o["created_at"][:10]
+        daily_revenue[d]  += float(o["charge_tl"])
+        daily_orders[d]   += 1
+
+    for p in (payments_res.data or []):
+        d = p["created_at"][:10]
+        daily_deposits[d] += float(p["amount_tl"])
+
+    result = []
+    for i in range(days - 1, -1, -1):
+        date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+        result.append({
+            "date":     date,
+            "revenue":  round(daily_revenue.get(date, 0), 2),
+            "orders":   daily_orders.get(date, 0),
+            "deposits": round(daily_deposits.get(date, 0), 2),
+        })
+
+    return result
 
 
 @router.get("/orders")
