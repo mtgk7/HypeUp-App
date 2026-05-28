@@ -3,7 +3,7 @@ from app.models.schemas import OrderCreateRequest, OrderOut
 from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.services.jap_service import get_jap_client
-from app.services.pricing_service import calculate_order_cost
+from app.services.pricing_service import calculate_order_cost, get_tier_price
 from app.services.currency_service import get_current_rate
 from datetime import datetime, timezone
 import logging
@@ -29,11 +29,13 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
     if body.quantity > svc["max_order"]:
         raise HTTPException(status_code=400, detail=f"Maksimum sipariş adedi: {svc['max_order']}")
 
-    # 3. Fiyat hesapla
+    # 3. Fiyat hesapla (tier varsa tier fiyatı, yoksa flat)
     dolar_kuru = get_current_rate()
+    tier_price = get_tier_price(int(svc["jap_service_id"]), body.quantity)
+    effective_tl_per_1000 = tier_price if tier_price is not None else float(svc["hypeup_tl_price"])
     costs = calculate_order_cost(
         jap_dolar_per_1000=float(svc["jap_dolar_price"]),
-        hypeup_tl_per_1000=float(svc["hypeup_tl_price"]),
+        hypeup_tl_per_1000=effective_tl_per_1000,
         quantity=body.quantity,
         dolar_kuru=dolar_kuru,
     )

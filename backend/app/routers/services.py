@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.database import get_supabase_client
-from app.services.pricing_service import hesapla_hypeup_satis_fiyati
+from app.services.pricing_service import hesapla_hypeup_satis_fiyati, get_tier_price
 from app.services.jap_service import JustAnotherPanelClient
 from app.models.schemas import ServicePriceQuery, ServicePriceResponse
 from app.utils.auth import get_current_user
@@ -88,9 +88,14 @@ async def calculate_price(
         raise HTTPException(status_code=400, detail=f"Maksimum sipariş: {svc['max_order']}")
 
     dolar_kuru = get_current_rate()
+
+    # Tier fiyatı varsa kullan, yoksa flat fiyata dön
+    tier_price = get_tier_price(int(svc["jap_service_id"]), body.quantity)
+    effective_tl_per_1000 = tier_price if tier_price is not None else float(svc["hypeup_tl_price"])
+
     costs = calculate_order_cost(
         jap_dolar_per_1000=float(svc["jap_dolar_price"]),
-        hypeup_tl_per_1000=float(svc["hypeup_tl_price"]),
+        hypeup_tl_per_1000=effective_tl_per_1000,
         quantity=body.quantity,
         dolar_kuru=dolar_kuru,
     )
@@ -98,7 +103,7 @@ async def calculate_price(
     return ServicePriceResponse(
         service_id=body.service_id,
         quantity=body.quantity,
-        unit_tl_price=round(float(svc["hypeup_tl_price"]) / 1000, 6),
+        unit_tl_price=round(effective_tl_per_1000 / 1000, 6),
         total_tl=costs["charge_tl"],
         total_dolar=costs["cost_dolar"],
     )
