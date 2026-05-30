@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
       try {
         const res = await adminApi.setCurrency(rate);
         await loadStats();
-        setKurMsg(`✅ Kur ₺${rate} olarak ayarlandı. ${res.data.updated_services} servis fiyatı güncellendi.`);
+        setKurMsg(`✅ Kur ₺${rate} olarak ayarlandı. Fiyatlar güncelleniyor — bittiğinde Telegram'a bildirim gelecek.`);
         setManualKur("");
         setSettingKur(false);
         return;
