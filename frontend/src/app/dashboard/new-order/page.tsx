@@ -7,6 +7,18 @@ import { Loader2, ShoppingCart, TrendingUp } from "lucide-react";
 
 const PLATFORMS = ["Instagram", "TikTok", "YouTube", "X", "Telegram", "Facebook", "Spotify", "Discord", "Pinterest"];
 
+const LINK_PLACEHOLDER: Record<string, string> = {
+  Instagram:  "https://instagram.com/kullanici",
+  TikTok:     "https://tiktok.com/@kullanici",
+  YouTube:    "https://youtube.com/@kanal",
+  X:          "https://x.com/kullanici",
+  Telegram:   "https://t.me/kanal",
+  Facebook:   "https://facebook.com/sayfa",
+  Spotify:    "https://open.spotify.com/artist/...",
+  Discord:    "https://discord.gg/davet",
+  Pinterest:  "https://pinterest.com/kullanici",
+};
+
 export default function NewOrderPage() {
   const [platform, setPlatform] = useState("Instagram");
   const [services, setServices] = useState<Service[]>([]);
@@ -169,7 +181,7 @@ export default function NewOrderPage() {
           <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Hedef Link</label>
           <input
             type="url"
-            placeholder="https://instagram.com/kullanici"
+            placeholder={LINK_PLACEHOLDER[platform] || "https://..."}
             value={link}
             onChange={(e) => setLink(e.target.value)}
             required
