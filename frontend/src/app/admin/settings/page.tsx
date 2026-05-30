@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { adminApi } from "@/lib/api";
 import { AdminStats } from "@/types";
-import { Settings, RefreshCw, Database, Loader2, DollarSign, Check } from "lucide-react";
+import { Settings, RefreshCw, Database, Loader2, DollarSign, Check, Wallet, List } from "lucide-react";
 
 export default function AdminSettingsPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
@@ -12,6 +12,8 @@ export default function AdminSettingsPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
   const [kurMsg, setKurMsg] = useState("");
+  const [prm4uBalance, setPrm4uBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
 
   useEffect(() => { loadStats(); }, []);
 
@@ -39,16 +41,28 @@ export default function AdminSettingsPage() {
     }
   }
 
-  async function syncJap() {
+  async function syncPrm4u() {
     setSyncing(true);
     setSyncMsg("");
     try {
-      const res = await adminApi.syncJap();
+      const res = await adminApi.syncPrm4u();
       setSyncMsg(`${res.data.synced} servis güncellendi, ${res.data.skipped} atlandı.`);
     } catch (err: any) {
-      setSyncMsg(err.response?.data?.detail || "JAP sync hatası");
+      setSyncMsg(err.response?.data?.detail || "PRM4U sync hatası");
     } finally {
       setSyncing(false);
+    }
+  }
+
+  async function checkPrm4uBalance() {
+    setBalanceLoading(true);
+    try {
+      const res = await adminApi.prm4uBalance();
+      setPrm4uBalance(`$${res.data.balance ?? JSON.stringify(res.data)}`);
+    } catch (err: any) {
+      setPrm4uBalance(err.response?.data?.detail || "Bağlantı hatası");
+    } finally {
+      setBalanceLoading(false);
     }
   }
 
@@ -93,18 +107,43 @@ export default function AdminSettingsPage() {
         )}
       </div>
 
-      {/* JAP Senkronizasyon */}
+      {/* PRM4U Bakiye */}
+      <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Wallet className="w-4 h-4 text-green-400" />
+          <h2 className="font-semibold">PRM4U Bakiye</h2>
+        </div>
+        <p className="text-xs text-white/30 mb-4">
+          PRM4U hesabındaki mevcut USD bakiyesini kontrol et.
+        </p>
+
+        <div className="flex items-center gap-4">
+          <button
+            onClick={checkPrm4uBalance}
+            disabled={balanceLoading}
+            className="flex items-center gap-2 bg-green-600/20 border border-green-500/30 text-green-400 hover:bg-green-600/30 disabled:opacity-50 px-4 py-2.5 rounded-xl text-sm transition"
+          >
+            {balanceLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wallet className="w-4 h-4" />}
+            Bakiye Sorgula
+          </button>
+          {prm4uBalance && (
+            <span className="text-sm font-semibold text-green-400">{prm4uBalance}</span>
+          )}
+        </div>
+      </div>
+
+      {/* PRM4U Senkronizasyon */}
       <div className="bg-[#111] border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-1">
           <Database className="w-4 h-4 text-blue-400" />
-          <h2 className="font-semibold">JAP Servis Senkronizasyonu</h2>
+          <h2 className="font-semibold">PRM4U Servis Senkronizasyonu</h2>
         </div>
         <p className="text-xs text-white/30 mb-4">
-          JAP'tan tüm servisleri çekip güncel fiyatları kâr motoruyla otomatik hesapla ve veritabanını güncelle.
+          PRM4U'dan tüm servisleri çekip güncel fiyatları kâr motoruyla otomatik hesapla ve veritabanını güncelle.
         </p>
 
         <button
-          onClick={syncJap}
+          onClick={syncPrm4u}
           disabled={syncing}
           className="flex items-center gap-2 bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/30 disabled:opacity-50 px-4 py-2.5 rounded-xl text-sm transition"
         >

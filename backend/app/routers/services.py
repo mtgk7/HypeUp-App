@@ -15,8 +15,8 @@ router = APIRouter(
     tags=["Services"]
 )
 
-JAP_URL = os.getenv("JAP_API_URL", "https://justanotherpanel.com/api/v2")
-JAP_KEY = os.getenv("JAP_API_KEY", "YOUR_JAP_API_KEY")
+PRM4U_URL = os.getenv("PRM4U_API_URL", "https://prm4u.com/api/v2")
+PRM4U_KEY = os.getenv("PRM4U_API_KEY", "")
 
 
 # --- 0. PUBLIC — Auth gerektirmez, landing page için ---
@@ -160,14 +160,14 @@ async def sync_services_from_provider():
     try:
         import httpx
         async with httpx.AsyncClient(timeout=15) as client:
-            r = await client.post(JAP_URL, data={"key": JAP_KEY, "action": "services"})
+            r = await client.post(PRM4U_URL, data={"key": PRM4U_KEY, "action": "services"})
             r.raise_for_status()
             jap_services = r.json()
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Toptancı API'sine bağlanılamadı: {str(e)}")
 
     if isinstance(jap_services, dict) and "error" in jap_services:
-        raise HTTPException(status_code=400, detail=f"JAP Hatası: {jap_services['error']}")
+        raise HTTPException(status_code=400, detail=f"PRM4U Hatası: {jap_services['error']}")
 
     # 3. Bizim yerelde eşleştirdiğimiz servisleri güncelle
     local_services = (

@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 24  # 24 saat
 
-    # JustAnotherPanel
-    JAP_API_KEY: str
-    JAP_API_URL: str = "https://justanotherpanel.com/api/v2"
+    # PRM4U (SMM Panel API v2)
+    PRM4U_API_KEY: str = ""
+    PRM4U_API_URL: str = "https://prm4u.com/api/v2"
 
     # Döviz API (fallback: TCMB)
     CURRENCY_API_URL: str = "https://api.exchangerate-api.com/v4/latest/USD"

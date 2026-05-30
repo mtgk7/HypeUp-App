@@ -6,6 +6,7 @@ from app.services.jap_service import get_jap_client
 from app.services.pricing_service import calculate_order_cost, get_tier_price
 from app.services.currency_service import get_current_rate
 from app.services.telegram_service import send_telegram
+from app.routers.notifications import create_notification
 from datetime import datetime, timezone
 import logging
 
@@ -88,12 +89,16 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
         order["status"] = "processing"
 
     except Exception as e:
-        logger.error(f"[Orders] JAP hatası, bakiye iade ediliyor: {e}")
-        # Bakiyeyi iade et
+        logger.error(f"[Orders] PRM4U hatası, bakiye iade ediliyor: {e}")
         db.table("users").update({"balance": user_balance}).eq("id", user["id"]).execute()
-        # Siparişi iptal et
         db.table("orders").update({"status": "cancelled"}).eq("id", order["id"]).execute()
         order["status"] = "cancelled"
+        create_notification(
+            user["id"],
+            "Sipariş İletilemedi",
+            f"{svc.get('service_name', 'Siparişin')} sağlayıcıya iletilemedi, ₺{charge_tl:.2f} bakiyene iade edildi.",
+            "error",
+        )
         raise HTTPException(
             status_code=502,
             detail="Sipariş sağlayıcıya iletilemedi, bakiyeniz iade edildi. Lütfen tekrar deneyin."

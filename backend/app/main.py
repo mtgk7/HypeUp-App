@@ -28,14 +28,14 @@ async def currency_refresh_loop():
         await asyncio.sleep(60 * 60 * 24)
 
 
-async def jap_sync_loop():
-    """Her saat JAP sipariş durumlarını senkronize et."""
+async def order_sync_loop():
+    """Her saat PRM4U sipariş durumlarını senkronize et."""
     while True:
-        await asyncio.sleep(60 * 60)  # İlk çalışma 1 saat sonra
+        await asyncio.sleep(60 * 60)
         try:
             await sync_order_statuses()
         except Exception as e:
-            logger.error(f"[Scheduler] JAP sync hatası: {e}")
+            logger.error(f"[Scheduler] PRM4U sync hatası: {e}")
 
 
 @asynccontextmanager
@@ -49,7 +49,7 @@ async def lifespan(app: FastAPI):
 
     # Arka plan görevler
     task1 = asyncio.create_task(currency_refresh_loop())
-    task2 = asyncio.create_task(jap_sync_loop())
+    task2 = asyncio.create_task(order_sync_loop())
 
     yield
 

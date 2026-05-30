@@ -95,7 +95,10 @@ export const adminApi = {
   toggleUser: (user_id: string) =>
     api.patch(`/admin/users/${user_id}/toggle`),
   refreshCurrency: () => api.post("/admin/currency/refresh"),
-  syncJap: () => api.post("/admin/services/sync-jap"),
+  syncPrm4u: () => api.post("/admin/services/sync-prm4u"),
+  prm4uServices: () => api.get("/admin/prm4u/services"),
+  prm4uBalance: () => api.get("/admin/prm4u/balance"),
+  syncJap: () => api.post("/admin/services/sync-prm4u"), // eski alias
   // Siparişler
   orders: (status?: string) =>
     api.get("/admin/orders", { params: status ? { status } : {} }),

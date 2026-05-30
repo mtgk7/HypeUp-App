@@ -78,35 +78,72 @@ async def refresh_rate(_admin: dict = Depends(require_admin)):
     )
 
 
-@router.post("/services/sync-jap")
-async def sync_jap_services(_admin: dict = Depends(require_admin)):
+@router.get("/prm4u/services")
+async def list_prm4u_services(_admin: dict = Depends(require_admin)):
     """
-    JAP'tan tüm servisleri çekip veritabanına upsert et.
-    Fiyatları otomatik hesaplar.
+    PRM4U'dan tüm servis listesini çek — eşleştirme için kullan.
+    API key alındıktan sonra buradan ID'leri görüp Supabase'e girebilirsin.
     """
-    jap = get_jap_client()
+    prm4u = get_jap_client()
+    try:
+        services = await prm4u.get_services()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"PRM4U bağlantı hatası: {e}")
+
+    # Platform'a göre grupla, kolay taramak için
+    grouped: dict = {}
+    for svc in services:
+        name = svc.get("name", "")
+        platform = _guess_platform(name)
+        grouped.setdefault(platform, []).append({
+            "id": svc.get("service") or svc.get("id"),
+            "name": name,
+            "rate_per_1000_usd": svc.get("rate"),
+            "min": svc.get("min"),
+            "max": svc.get("max"),
+        })
+
+    return {"total": len(services), "grouped": grouped}
+
+
+@router.get("/prm4u/balance")
+async def get_prm4u_balance(_admin: dict = Depends(require_admin)):
+    """PRM4U bakiyesini kontrol et."""
+    prm4u = get_jap_client()
+    try:
+        return await prm4u.get_balance()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"PRM4U hatası: {e}")
+
+
+@router.post("/services/sync-prm4u")
+async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
+    """
+    PRM4U'dan tüm servisleri çekip veritabanına upsert et.
+    Fiyatları otomatik hesaplar. Supabase'deki jap_service_id'ler PRM4U ID'si olmalı.
+    """
+    prm4u = get_jap_client()
     dolar_kuru = get_current_rate()
     db = get_supabase()
 
     try:
-        jap_services = await jap.get_services()
+        prm4u_services = await prm4u.get_services()
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"JAP bağlantı hatası: {e}")
+        raise HTTPException(status_code=502, detail=f"PRM4U bağlantı hatası: {e}")
 
     synced, skipped = 0, 0
 
-    for svc in jap_services:
+    for svc in prm4u_services:
         try:
-            jap_id = int(svc.get("service") or svc.get("id", 0))
+            svc_id = int(svc.get("service") or svc.get("id", 0))
             name = svc.get("name", "")
-            rate_str = svc.get("rate", "0")         # 1000 adet dolar fiyatı
+            rate_str = svc.get("rate", "0")
             min_qty = int(svc.get("min", 100))
             max_qty = int(svc.get("max", 100000))
-            jap_dolar = float(str(rate_str).replace(",", "."))
+            dolar_price = float(str(rate_str).replace(",", "."))
 
-            hypeup_tl = calculate_hypeup_price(jap_dolar, dolar_kuru)
+            hypeup_tl = calculate_hypeup_price(dolar_price, dolar_kuru)
 
-            # Category eşleştirme (servis adından platform tahmini)
             platform = _guess_platform(name)
             cat_result = db.table("categories").select("id").eq("platform_name", platform).limit(1).execute()
             cat_id = cat_result.data[0]["id"] if cat_result.data else None
@@ -115,10 +152,10 @@ async def sync_jap_services(_admin: dict = Depends(require_admin)):
                 continue
 
             db.table("services").upsert({
-                "jap_service_id": jap_id,
+                "jap_service_id": svc_id,
                 "category_id": cat_id,
                 "service_name": name,
-                "jap_dolar_price": jap_dolar,
+                "jap_dolar_price": dolar_price,
                 "hypeup_tl_price": hypeup_tl,
                 "min_order": min_qty,
                 "max_order": max_qty,
@@ -128,10 +165,16 @@ async def sync_jap_services(_admin: dict = Depends(require_admin)):
 
             synced += 1
         except Exception as e:
-            logger.warning(f"[SyncJAP] Servis atlandı: {e}")
+            logger.warning(f"[SyncPRM4U] Servis atlandı: {e}")
             skipped += 1
 
     return {"synced": synced, "skipped": skipped, "dolar_kuru": dolar_kuru}
+
+
+@router.post("/services/sync-jap")
+async def sync_jap_services_legacy(_admin: dict = Depends(require_admin)):
+    """Eski endpoint — sync-prm4u kullan."""
+    return await sync_prm4u_services(_admin)
 
 
 @router.get("/stats/chart")
