@@ -30,26 +30,36 @@ export default function AdminSettingsPage() {
   }
 
   async function refreshCurrency() {
-    setRefreshing(true);
-    setKurMsg("");
-    try {
-      const res = await adminApi.refreshCurrency();
-      await loadStats();
-      setKurMsg(`Güncellendi: 1 USD = ₺${res.data.rate}`);
-    } catch {
-      setKurMsg("Kur güncellenemedi");
-    } finally {
-      setRefreshing(false);
+    setRefreshing(true); setKurMsg("Bağlanılıyor...");
+    const start = Date.now();
+    while (Date.now() - start < 90000) {
+      try {
+        const res = await adminApi.refreshCurrency();
+        await loadStats();
+        setKurMsg(`Güncellendi: 1 USD = ₺${res.data.rate}`);
+        setRefreshing(false); return;
+      } catch {
+        setKurMsg(`Backend başlatılıyor... (${Math.round((Date.now()-start)/1000)}s)`);
+        await new Promise(r => setTimeout(r, 8000));
+      }
     }
+    setKurMsg("Bağlantı hatası. Tekrar deneyin."); setRefreshing(false);
   }
 
   async function setManualRate() {
     const rate = parseFloat(manualKur);
     if (!rate || rate < 1 || rate > 500) { setKurMsg("Geçersiz kur değeri"); return; }
-    setSettingKur(true); setKurMsg("Bağlanılıyor...");
+    setSettingKur(true);
 
-    // Backend uyuyorsa ilk istek başarısız olabilir — 3 kez dene
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    const TIMEOUT_MS = 90000; // 90 saniye max bekle
+    const INTERVAL_MS = 8000; // Her 8 saniyede dene
+    const start = Date.now();
+    let attempt = 0;
+
+    while (Date.now() - start < TIMEOUT_MS) {
+      attempt++;
+      const elapsed = Math.round((Date.now() - start) / 1000);
+      setKurMsg(attempt === 1 ? "Bağlanılıyor..." : `Backend başlatılıyor... (${elapsed}s)`);
       try {
         const res = await adminApi.setCurrency(rate);
         await loadStats();
@@ -58,28 +68,30 @@ export default function AdminSettingsPage() {
         setSettingKur(false);
         return;
       } catch {
-        if (attempt < 3) {
-          setKurMsg(`Backend uyanıyor, ${attempt * 10} sn bekleniyor... (${attempt}/3)`);
-          await new Promise(r => setTimeout(r, attempt * 10000));
-        } else {
-          setKurMsg("❌ Bağlantı hatası. Sayfayı yenileyip tekrar deneyin.");
-        }
+        await new Promise(r => setTimeout(r, INTERVAL_MS));
       }
     }
+
+    setKurMsg("❌ Backend yanıt vermiyor. Birkaç dakika sonra tekrar deneyin.");
     setSettingKur(false);
   }
 
   async function syncPrm4u() {
-    setSyncing(true);
-    setSyncMsg("");
-    try {
-      const res = await adminApi.syncPrm4u();
-      setSyncMsg(`${res.data.synced} servis güncellendi, ${res.data.skipped} atlandı.`);
-    } catch (err: any) {
-      setSyncMsg(err.response?.data?.detail || "Sağlayıcı sync hatası");
-    } finally {
-      setSyncing(false);
+    setSyncing(true); setSyncMsg("Bağlanılıyor...");
+    const start = Date.now();
+    while (Date.now() - start < 90000) {
+      try {
+        const res = await adminApi.syncPrm4u();
+        setSyncMsg(`${res.data.synced} servis güncellendi, ${res.data.skipped} atlandı.`);
+        setSyncing(false); return;
+      } catch (err: any) {
+        const msg = err.response?.data?.detail;
+        if (msg) { setSyncMsg(msg); setSyncing(false); return; }
+        setSyncMsg(`Backend başlatılıyor... (${Math.round((Date.now()-start)/1000)}s)`);
+        await new Promise(r => setTimeout(r, 8000));
+      }
     }
+    setSyncMsg("Bağlantı hatası. Tekrar deneyin."); setSyncing(false);
   }
 
   async function checkPrm4uBalance() {
