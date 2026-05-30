@@ -106,14 +106,15 @@ async def full_sync():
         for row in cat_rows:
             platform_to_cat.setdefault(row["platform_name"], row["id"])
 
-        from app.routers.admin import _guess_platform
+        from app.routers.admin import _guess_platform, ACTIVE_PLATFORMS
         rows, skipped = [], 0
         for svc in prm4u_services:
             try:
                 svc_id   = int(svc.get("service") or svc.get("id", 0))
                 name     = svc.get("name", "")
                 dolar_pr = float(str(svc.get("rate", "0")).replace(",", "."))
-                cat_id   = platform_to_cat.get(_guess_platform(name))
+                platform = _guess_platform(name)
+                cat_id   = platform_to_cat.get(platform)
                 if not cat_id:
                     skipped += 1
                     continue
@@ -126,7 +127,7 @@ async def full_sync():
                     "min_order": int(svc.get("min", 100)),
                     "max_order": int(svc.get("max", 100000)),
                     "description": svc.get("description", ""),
-                    "is_active": True,
+                    "is_active": platform in ACTIVE_PLATFORMS,
                 })
             except Exception:
                 skipped += 1

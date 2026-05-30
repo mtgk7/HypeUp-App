@@ -205,7 +205,7 @@ async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
                 "min_order": min_qty,
                 "max_order": max_qty,
                 "description": svc.get("description", ""),
-                "is_active": True,
+                "is_active": platform in ACTIVE_PLATFORMS,
             })
         except Exception as e:
             logger.warning(f"[SyncPRM4U] Servis parse hatası: {e}")
@@ -420,6 +420,13 @@ async def toggle_user_status(user_id: str, _admin: dict = Depends(require_admin)
     new_status = not result.data[0]["is_active"]
     updated = db.table("users").update({"is_active": new_status}).eq("id", user_id).execute()
     return UserOut(**updated.data[0])
+
+
+# Kullanıcıya gösterilen aktif platformlar — sync bunlar dışındakini pasif yapar
+ACTIVE_PLATFORMS = {
+    "Instagram", "TikTok", "YouTube", "X",
+    "Telegram", "Facebook", "Spotify", "Discord", "Pinterest",
+}
 
 
 def _guess_platform(name: str) -> str:
