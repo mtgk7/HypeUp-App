@@ -28,6 +28,7 @@ async def list_public_services():
         supabase.table("services")
         .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
         .eq("is_active", True)
+        .limit(5000)
         .execute()
     )
     services = []
