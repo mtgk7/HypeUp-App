@@ -244,6 +244,37 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* POPÜLER PAKETLER — sayfanın üstü */}
+      <section className="max-w-6xl mx-auto px-5 pb-4">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-1.5">Popüler Paketler</h2>
+          <p className="text-white/35 text-sm">En çok tercih edilen hizmetler. Kayıt ol, hemen sipariş ver.</p>
+        </div>
+        {loadingSvc ? (
+          <div className="flex items-center gap-2 text-white/30 text-sm py-6">
+            <Loader2 className="w-5 h-5 animate-spin" /> Yükleniyor...
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {QUICK_PICKS.map((pick) => (
+              <Link
+                key={pick.label}
+                href="/register"
+                className="group bg-[#0f0d1c] border border-white/[0.08] hover:border-violet-500/50 hover:bg-violet-500/5 rounded-2xl p-4 transition-all"
+              >
+                <div className="text-2xl mb-2">{pick.emoji}</div>
+                <p className="text-sm font-semibold text-white/90 group-hover:text-white leading-tight mb-2">{pick.label}</p>
+                <p className="text-base font-bold text-white">{pick.qty.toLocaleString()} <span className="text-xs font-normal text-white/40">adet</span></p>
+                <p className="text-xl font-black text-violet-400 mt-1">{pickPrice(pick, services)}</p>
+                <div className="flex items-center justify-center gap-1 mt-3 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition">
+                  Sipariş Ver <ChevronRight className="w-3 h-3" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* RAKAMLAR — horizontal strip */}
       <section className="border-y border-white/[0.06] bg-[#0d0b1a]">
         <div className="max-w-6xl mx-auto px-5 py-6 grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.06]">
@@ -289,37 +320,6 @@ export default function LandingPage() {
             );
           })}
         </div>
-      </section>
-
-      {/* POPÜLER PAKETLER */}
-      <section className="max-w-6xl mx-auto px-5 py-14">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold mb-1.5">Popüler Paketler</h2>
-          <p className="text-white/35 text-sm">En çok tercih edilen hizmetler. Kayıt ol, hemen sipariş ver.</p>
-        </div>
-        {loadingSvc ? (
-          <div className="flex items-center gap-2 text-white/30 text-sm py-6">
-            <Loader2 className="w-5 h-5 animate-spin" /> Yükleniyor...
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {QUICK_PICKS.map((pick) => (
-              <Link
-                key={pick.label}
-                href="/register"
-                className="group bg-[#0f0d1c] border border-white/[0.08] hover:border-violet-500/50 hover:bg-violet-500/5 rounded-2xl p-4 transition-all"
-              >
-                <div className="text-2xl mb-2">{pick.emoji}</div>
-                <p className="text-sm font-semibold text-white/90 group-hover:text-white leading-tight mb-2">{pick.label}</p>
-                <p className="text-base font-bold text-white">{pick.qty.toLocaleString()} <span className="text-xs font-normal text-white/40">adet</span></p>
-                <p className="text-xl font-black text-violet-400 mt-1">{pickPrice(pick, services)}</p>
-                <div className="flex items-center justify-center gap-1 mt-3 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition">
-                  Sipariş Ver <ChevronRight className="w-3 h-3" />
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* SERVİSLER */}
