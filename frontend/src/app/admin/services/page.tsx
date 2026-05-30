@@ -83,7 +83,7 @@ export default function AdminServicesPage() {
               <tr className="border-b border-white/8 text-white/30 text-xs uppercase">
                 <th className="px-4 py-3 text-left">Platform</th>
                 <th className="px-4 py-3 text-left">Servis Adı</th>
-                <th className="px-4 py-3 text-right">JAP Alış (₺/1000)</th>
+                <th className="px-4 py-3 text-right">Maliyet (₺/1000)</th>
                 <th className="px-4 py-3 text-right">Satış (₺/1000)</th>
                 <th className="px-4 py-3 text-center">Min</th>
                 <th className="px-4 py-3 text-center">Aktif</th>

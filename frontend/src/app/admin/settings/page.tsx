@@ -48,7 +48,7 @@ export default function AdminSettingsPage() {
       const res = await adminApi.syncPrm4u();
       setSyncMsg(`${res.data.synced} servis güncellendi, ${res.data.skipped} atlandı.`);
     } catch (err: any) {
-      setSyncMsg(err.response?.data?.detail || "PRM4U sync hatası");
+      setSyncMsg(err.response?.data?.detail || "Sağlayıcı sync hatası");
     } finally {
       setSyncing(false);
     }
@@ -107,14 +107,14 @@ export default function AdminSettingsPage() {
         )}
       </div>
 
-      {/* PRM4U Bakiye */}
+      {/* Sağlayıcı Bakiye */}
       <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4">
         <div className="flex items-center gap-2 mb-1">
           <Wallet className="w-4 h-4 text-green-400" />
-          <h2 className="font-semibold">PRM4U Bakiye</h2>
+          <h2 className="font-semibold">Sağlayıcı Bakiye</h2>
         </div>
         <p className="text-xs text-white/30 mb-4">
-          PRM4U hesabındaki mevcut USD bakiyesini kontrol et.
+          Sağlayıcı hesabındaki mevcut USD bakiyesini kontrol et.
         </p>
 
         <div className="flex items-center gap-4">
@@ -132,14 +132,14 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      {/* PRM4U Senkronizasyon */}
+      {/* Sağlayıcı Senkronizasyon */}
       <div className="bg-[#111] border border-white/8 rounded-2xl p-6">
         <div className="flex items-center gap-2 mb-1">
           <Database className="w-4 h-4 text-blue-400" />
-          <h2 className="font-semibold">PRM4U Servis Senkronizasyonu</h2>
+          <h2 className="font-semibold">Sağlayıcı Servis Senkronizasyonu</h2>
         </div>
         <p className="text-xs text-white/30 mb-4">
-          PRM4U'dan tüm servisleri çekip güncel fiyatları kâr motoruyla otomatik hesapla ve veritabanını güncelle.
+          Sağlayıcı'dan tüm servisleri çekip güncel fiyatları kâr motoruyla otomatik hesapla ve veritabanını güncelle.
         </p>
 
         <button
