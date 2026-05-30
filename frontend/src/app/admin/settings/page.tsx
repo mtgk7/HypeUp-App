@@ -17,7 +17,11 @@ export default function AdminSettingsPage() {
   const [prm4uBalance, setPrm4uBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
-  useEffect(() => { loadStats(); }, []);
+  // Sayfa açılınca backend'i uyandır (no-cors ping)
+  useEffect(() => {
+    fetch("https://hypeup-app.onrender.com/health", { mode: "no-cors" }).catch(() => {});
+    loadStats();
+  }, []);
 
   async function loadStats() {
     setLoading(true);
@@ -47,8 +51,8 @@ export default function AdminSettingsPage() {
   }
 
   async function setManualRate() {
-    const rate = parseFloat(manualKur);
-    if (!rate || rate < 1 || rate > 500) { setKurMsg("Geçersiz kur değeri"); return; }
+    const rate = parseFloat(manualKur.replace(",", "."));
+    if (!rate || rate < 1 || rate > 500) { setKurMsg("Geçersiz kur değeri (örn: 47.50)"); return; }
     setSettingKur(true);
 
     const TIMEOUT_MS = 90000; // 90 saniye max bekle
