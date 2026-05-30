@@ -46,14 +46,13 @@ export default function NewOrderPage() {
   const [error, setError] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
 
-  // Tüm servisleri sayfa açılınca tek seferde yükle
+  // Tüm servisleri public API'den yükle (auth gerektirmez, hızlı)
   useEffect(() => {
     (async () => {
       setLoadingServices(true);
       try {
-        const res = await servicesApi.list("");
-        const raw = res.data;
-        const all: Service[] = Array.isArray(raw) ? raw : (raw.services ?? []);
+        const res = await servicesApi.public();
+        const all: Service[] = Array.isArray(res.data) ? res.data : [];
         setAllServices(all);
         setServices(all.filter(s => s.platform_name === "Instagram"));
       } catch { setAllServices([]); }

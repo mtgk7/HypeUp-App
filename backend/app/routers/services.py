@@ -26,7 +26,7 @@ async def list_public_services():
     supabase = get_supabase_client()
     result = (
         supabase.table("services")
-        .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name)")
+        .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
         .eq("is_active", True)
         .execute()
     )
@@ -40,6 +40,7 @@ async def list_public_services():
             "min_order":       svc["min_order"],
             "max_order":       svc["max_order"],
             "platform_name":   cat.get("platform_name", ""),
+            "category_name":   cat.get("category_name", ""),
         })
     return services
 
