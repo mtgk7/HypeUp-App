@@ -46,17 +46,27 @@ export default function AdminSettingsPage() {
   async function setManualRate() {
     const rate = parseFloat(manualKur);
     if (!rate || rate < 1 || rate > 500) { setKurMsg("Geçersiz kur değeri"); return; }
-    setSettingKur(true); setKurMsg("");
-    try {
-      const res = await adminApi.setCurrency(rate);
-      await loadStats();
-      setKurMsg(`Kur ₺${rate} olarak ayarlandı. ${res.data.updated_services} servis fiyatı güncellendi.`);
-      setManualKur("");
-    } catch {
-      setKurMsg("Kur güncellenemedi");
-    } finally {
-      setSettingKur(false);
+    setSettingKur(true); setKurMsg("Bağlanılıyor...");
+
+    // Backend uyuyorsa ilk istek başarısız olabilir — 3 kez dene
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      try {
+        const res = await adminApi.setCurrency(rate);
+        await loadStats();
+        setKurMsg(`✅ Kur ₺${rate} olarak ayarlandı. ${res.data.updated_services} servis fiyatı güncellendi.`);
+        setManualKur("");
+        setSettingKur(false);
+        return;
+      } catch {
+        if (attempt < 3) {
+          setKurMsg(`Backend uyanıyor, ${attempt * 10} sn bekleniyor... (${attempt}/3)`);
+          await new Promise(r => setTimeout(r, attempt * 10000));
+        } else {
+          setKurMsg("❌ Bağlantı hatası. Sayfayı yenileyip tekrar deneyin.");
+        }
+      }
     }
+    setSettingKur(false);
   }
 
   async function syncPrm4u() {
