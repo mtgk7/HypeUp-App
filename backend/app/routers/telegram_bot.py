@@ -129,68 +129,79 @@ async def handle_callback(cbq: dict):
     cbq_id   = cbq.get("id", "")
     chat_id  = str(cbq.get("from", {}).get("id", ""))
     msg_id   = cbq.get("message", {}).get("message_id")
+    msg_chat = str(cbq.get("message", {}).get("chat", {}).get("id", ""))
     data_str = cbq.get("data", "")
 
-    if chat_id != str(s.TELEGRAM_CHAT_ID):
+    logger.info(f"[TelegramCallback] data={data_str} from={chat_id} chat={msg_chat}")
+
+    # Yetki kontrolü — hem from.id hem chat.id kontrol et
+    allowed = {str(s.TELEGRAM_CHAT_ID)}
+    if chat_id not in allowed and msg_chat not in allowed:
         await answer_callback(cbq_id, "❌ Yetkisiz")
         return
 
-    db = get_supabase()
+    try:
+        db = get_supabase()
 
-    # ── Ödeme onayla ───────────────────────────
-    if data_str.startswith("approve_payment_"):
-        payment_id = data_str.replace("approve_payment_", "")
-        result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
-        if not result.data:
-            await answer_callback(cbq_id, "❌ Ödeme bulunamadı"); return
-        tx = result.data[0]
-        if tx["status"] != "pending":
-            await answer_callback(cbq_id, "⚠️ Zaten işlenmiş"); return
+        # ── Ödeme onayla ───────────────────────────
+        if data_str.startswith("approve_payment_"):
+            payment_id = data_str.replace("approve_payment_", "")
+            result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
+            if not result.data:
+                await answer_callback(cbq_id, "❌ Ödeme bulunamadı"); return
+            tx = result.data[0]
+            if tx["status"] != "pending":
+                await answer_callback(cbq_id, f"⚠️ Zaten {tx['status']}"); return
 
-        user_res = db.table("users").select("balance, email").eq("id", tx["user_id"]).limit(1).execute()
-        if not user_res.data:
-            await answer_callback(cbq_id, "❌ Kullanıcı bulunamadı"); return
+            user_res = db.table("users").select("balance, email").eq("id", tx["user_id"]).limit(1).execute()
+            if not user_res.data:
+                await answer_callback(cbq_id, "❌ Kullanıcı bulunamadı"); return
 
-        new_bal = round(float(user_res.data[0]["balance"]) + float(tx["amount_tl"]), 2)
-        db.table("users").update({"balance": new_bal}).eq("id", tx["user_id"]).execute()
-        db.table("payment_transactions").update({"status": "completed"}).eq("id", payment_id).execute()
-        create_notification(tx["user_id"], "Bakiye Yüklendi 💰", f"₺{float(tx['amount_tl']):.2f} bakiyenize yüklendi.", "success")
+            new_bal = round(float(user_res.data[0]["balance"]) + float(tx["amount_tl"]), 2)
+            db.table("users").update({"balance": new_bal}).eq("id", tx["user_id"]).execute()
+            db.table("payment_transactions").update({"status": "completed"}).eq("id", payment_id).execute()
+            create_notification(tx["user_id"], "Bakiye Yüklendi 💰",
+                f"₺{float(tx['amount_tl']):.2f} bakiyenize yüklendi.", "success")
 
-        await answer_callback(cbq_id, "✅ Onaylandı!")
-        await edit_telegram_message(
-            str(s.TELEGRAM_CHAT_ID), msg_id,
-            f"✅ <b>Ödeme Onaylandı</b>\n"
-            f"👤 {user_res.data[0]['email']}\n"
-            f"💰 ₺{float(tx['amount_tl']):.2f}\n"
-            f"🔑 Ref: {tx.get('reference_code', '')}\n"
-            f"💳 Yeni bakiye: ₺{new_bal:.2f}"
-        )
+            await answer_callback(cbq_id, "✅ Onaylandı!")
+            await edit_telegram_message(
+                msg_chat or str(s.TELEGRAM_CHAT_ID), msg_id,
+                f"✅ <b>Ödeme Onaylandı</b>\n"
+                f"👤 {user_res.data[0]['email']}\n"
+                f"💰 ₺{float(tx['amount_tl']):.2f}\n"
+                f"🔑 Ref: {tx.get('reference_code', '')}\n"
+                f"💳 Yeni bakiye: ₺{new_bal:.2f}"
+            )
+            logger.info(f"[TelegramCallback] Ödeme onaylandı: {payment_id}, yeni bakiye ₺{new_bal}")
 
-    # ── Ödeme reddet ───────────────────────────
-    elif data_str.startswith("reject_payment_"):
-        payment_id = data_str.replace("reject_payment_", "")
-        result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
-        if not result.data:
-            await answer_callback(cbq_id, "❌ Ödeme bulunamadı"); return
-        tx = result.data[0]
-        if tx["status"] != "pending":
-            await answer_callback(cbq_id, "⚠️ Zaten işlenmiş"); return
+        # ── Ödeme reddet ───────────────────────────
+        elif data_str.startswith("reject_payment_"):
+            payment_id = data_str.replace("reject_payment_", "")
+            result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
+            if not result.data:
+                await answer_callback(cbq_id, "❌ Ödeme bulunamadı"); return
+            tx = result.data[0]
+            if tx["status"] != "pending":
+                await answer_callback(cbq_id, f"⚠️ Zaten {tx['status']}"); return
 
-        db.table("payment_transactions").update({"status": "failed"}).eq("id", payment_id).execute()
-        user_res = db.table("users").select("email").eq("id", tx["user_id"]).limit(1).execute()
-        email = user_res.data[0]["email"] if user_res.data else "?"
+            db.table("payment_transactions").update({"status": "failed"}).eq("id", payment_id).execute()
+            user_res = db.table("users").select("email").eq("id", tx["user_id"]).limit(1).execute()
+            email = user_res.data[0]["email"] if user_res.data else "?"
 
-        await answer_callback(cbq_id, "❌ Reddedildi")
-        await edit_telegram_message(
-            str(s.TELEGRAM_CHAT_ID), msg_id,
-            f"❌ <b>Ödeme Reddedildi</b>\n"
-            f"👤 {email}\n"
-            f"💰 ₺{float(tx['amount_tl']):.2f}\n"
-            f"🔑 Ref: {tx.get('reference_code', '')}"
-        )
+            await answer_callback(cbq_id, "❌ Reddedildi")
+            await edit_telegram_message(
+                msg_chat or str(s.TELEGRAM_CHAT_ID), msg_id,
+                f"❌ <b>Ödeme Reddedildi</b>\n"
+                f"👤 {email}\n"
+                f"💰 ₺{float(tx['amount_tl']):.2f}\n"
+                f"🔑 Ref: {tx.get('reference_code', '')}"
+            )
+        else:
+            await answer_callback(cbq_id)
 
-    else:
-        await answer_callback(cbq_id)
+    except Exception as e:
+        logger.error(f"[TelegramCallback] Hata: {e}")
+        await answer_callback(cbq_id, "❌ İşlem hatası")
 
 
 async def cmd_stats(chat_id: str):
