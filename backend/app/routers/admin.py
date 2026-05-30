@@ -90,7 +90,7 @@ async def set_rate_manual(body: dict, _admin: dict = Depends(require_admin)):
 
     db = get_supabase()
     # Kuru kaydet
-    db.table("settings").upsert({"key": "dolar_kuru", "value": str(rate)}).execute()
+    db.table("settings").upsert({"key": "dolar_kuru", "value": str(rate)}, on_conflict="key").execute()
 
     # Tüm aktif servislerin fiyatını yeniden hesapla
     from app.services.pricing_service import calculate_hypeup_price
