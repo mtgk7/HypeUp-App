@@ -160,21 +160,21 @@ export default function NewOrderPage() {
             <Loader2 className="w-4 h-4 animate-spin" /> Yükleniyor...
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {QUICK_PICKS.map((pick) => (
               <button
                 key={pick.label}
                 onClick={() => applyQuickPick(pick)}
-                className="group bg-[#151515] border border-white/8 hover:border-violet-500/40 hover:bg-violet-500/5 rounded-xl p-3 text-left transition-all"
+                className="group bg-[#151515] border border-white/8 hover:border-violet-500/50 hover:bg-violet-500/5 rounded-2xl p-4 text-left transition-all"
               >
-                <div className="text-lg mb-1.5">{pick.emoji}</div>
-                <p className="text-xs font-semibold text-white/80 group-hover:text-white leading-tight mb-1">{pick.label}</p>
-                <p className="text-[10px] text-white/30">{pick.qty.toLocaleString()} adet</p>
-                <p className="text-xs font-bold text-violet-400 mt-1">
+                <div className="text-2xl mb-2">{pick.emoji}</div>
+                <p className="text-sm font-semibold text-white/90 group-hover:text-white leading-tight mb-2">{pick.label}</p>
+                <p className="text-base font-bold text-white">{pick.qty.toLocaleString()} <span className="text-xs font-normal text-white/40">adet</span></p>
+                <p className="text-xl font-black text-violet-400 mt-1">
                   {getQuickPrice(pick)}
                 </p>
-                <div className="flex items-center gap-0.5 mt-1.5 text-[10px] text-violet-400/60 group-hover:text-violet-400 transition">
-                  Seç <ChevronRight className="w-2.5 h-2.5" />
+                <div className="flex items-center justify-center gap-1 mt-3 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition">
+                  Seç <ChevronRight className="w-3 h-3" />
                 </div>
               </button>
             ))}

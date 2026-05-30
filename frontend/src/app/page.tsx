@@ -78,6 +78,30 @@ interface PublicService {
   platform_name: string;
 }
 
+// Popüler paketler — new-order ile aynı eşleştirme
+const QUICK_PICKS = [
+  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",   maxPrice: 50,    qty: 1000,  emoji: "📸" },
+  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill", maxPrice: 20,    qty: 1000,  emoji: "❤️" },
+  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 20,    qty: 10000, emoji: "👁️" },
+  { label: "TikTok Hikaye",     platform: "TikTok",    nameContains: "story views",            maxPrice: 100,   qty: 1000,  emoji: "🎵" },
+  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 50,    qty: 10000, emoji: "🎬" },
+  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "aboneleri",              maxPrice: 5000,  qty: 100,   emoji: "▶️" },
+  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 50,    qty: 1000,  emoji: "✈️" },
+  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 20,    qty: 5000,  emoji: "🎧" },
+];
+
+function pickPrice(pick: typeof QUICK_PICKS[0], services: PublicService[]): string {
+  const matches = services
+    .filter(s => s.platform_name === pick.platform
+      && s.service_name.toLowerCase().includes(pick.nameContains.toLowerCase())
+      && s.hypeup_tl_price <= pick.maxPrice)
+    .sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price);
+  const svc = matches[0];
+  if (!svc) return "—";
+  const qty = Math.max(pick.qty, svc.min_order);
+  return `₺${((svc.hypeup_tl_price / 1000) * qty).toFixed(2)}`;
+}
+
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [services, setServices] = useState<PublicService[]>([]);
@@ -265,6 +289,37 @@ export default function LandingPage() {
             );
           })}
         </div>
+      </section>
+
+      {/* POPÜLER PAKETLER */}
+      <section className="max-w-6xl mx-auto px-5 py-14">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-1.5">Popüler Paketler</h2>
+          <p className="text-white/35 text-sm">En çok tercih edilen hizmetler. Kayıt ol, hemen sipariş ver.</p>
+        </div>
+        {loadingSvc ? (
+          <div className="flex items-center gap-2 text-white/30 text-sm py-6">
+            <Loader2 className="w-5 h-5 animate-spin" /> Yükleniyor...
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {QUICK_PICKS.map((pick) => (
+              <Link
+                key={pick.label}
+                href="/register"
+                className="group bg-[#0f0d1c] border border-white/[0.08] hover:border-violet-500/50 hover:bg-violet-500/5 rounded-2xl p-4 transition-all"
+              >
+                <div className="text-2xl mb-2">{pick.emoji}</div>
+                <p className="text-sm font-semibold text-white/90 group-hover:text-white leading-tight mb-2">{pick.label}</p>
+                <p className="text-base font-bold text-white">{pick.qty.toLocaleString()} <span className="text-xs font-normal text-white/40">adet</span></p>
+                <p className="text-xl font-black text-violet-400 mt-1">{pickPrice(pick, services)}</p>
+                <div className="flex items-center justify-center gap-1 mt-3 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition">
+                  Sipariş Ver <ChevronRight className="w-3 h-3" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* SERVİSLER */}

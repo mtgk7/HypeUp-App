@@ -22,27 +22,34 @@ PRM4U_KEY = os.getenv("PRM4U_API_KEY", "")
 # --- 0. PUBLIC — Auth gerektirmez, landing page için ---
 @router.get("/public")
 async def list_public_services():
-    """Giriş gerektirmez. Landing page servis + fiyat listesi için."""
+    """Giriş gerektirmez. Landing page servis + fiyat listesi için. Tüm aktif servisleri sayfalayarak döner."""
     supabase = get_supabase_client()
-    result = (
-        supabase.table("services")
-        .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
-        .eq("is_active", True)
-        .limit(5000)
-        .execute()
-    )
     services = []
-    for svc in (result.data or []):
-        cat = svc.pop("categories", {}) or {}
-        services.append({
-            "id":              svc["id"],
-            "service_name":    svc["service_name"],
-            "hypeup_tl_price": float(svc["hypeup_tl_price"]),
-            "min_order":       svc["min_order"],
-            "max_order":       svc["max_order"],
-            "platform_name":   cat.get("platform_name", ""),
-            "category_name":   cat.get("category_name", ""),
-        })
+    page_size = 1000
+    offset = 0
+    while True:
+        result = (
+            supabase.table("services")
+            .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
+            .eq("is_active", True)
+            .range(offset, offset + page_size - 1)
+            .execute()
+        )
+        batch = result.data or []
+        for svc in batch:
+            cat = svc.pop("categories", {}) or {}
+            services.append({
+                "id":              svc["id"],
+                "service_name":    svc["service_name"],
+                "hypeup_tl_price": float(svc["hypeup_tl_price"]),
+                "min_order":       svc["min_order"],
+                "max_order":       svc["max_order"],
+                "platform_name":   cat.get("platform_name", ""),
+                "category_name":   cat.get("category_name", ""),
+            })
+        if len(batch) < page_size:
+            break
+        offset += page_size
     return services
 
 
