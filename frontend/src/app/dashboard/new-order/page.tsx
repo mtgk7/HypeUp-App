@@ -5,7 +5,7 @@ import { servicesApi, ordersApi } from "@/lib/api";
 import { Service } from "@/types";
 import { Loader2, ShoppingCart, TrendingUp } from "lucide-react";
 
-const PLATFORMS = ["Instagram", "TikTok", "YouTube", "X"];
+const PLATFORMS = ["Instagram", "TikTok", "YouTube", "X", "Telegram", "Facebook", "Spotify", "Discord", "Pinterest"];
 
 export default function NewOrderPage() {
   const [platform, setPlatform] = useState("Instagram");
