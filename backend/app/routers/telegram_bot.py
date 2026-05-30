@@ -13,7 +13,7 @@ Komutlar:
 from fastapi import APIRouter, Request
 from app.database import get_supabase
 from app.config import get_settings
-from app.services.telegram_service import send_telegram
+from app.services.telegram_service import send_telegram, answer_callback, edit_telegram_message
 from app.routers.notifications import create_notification
 from datetime import datetime, timezone, timedelta
 import httpx
@@ -46,7 +46,7 @@ async def setup_webhook():
     async with httpx.AsyncClient(timeout=10) as client:
         r = await client.post(
             f"https://api.telegram.org/bot{s.TELEGRAM_BOT_TOKEN}/setWebhook",
-            json={"url": webhook_url, "allowed_updates": ["message"]},
+            json={"url": webhook_url, "allowed_updates": ["message", "callback_query"]},
         )
         return r.json()
 
@@ -60,6 +60,11 @@ async def telegram_webhook(request: Request):
     try:
         data = await request.json()
     except Exception:
+        return {"ok": True}
+
+    # ── Callback query (inline buton) ──────────────
+    if "callback_query" in data:
+        await handle_callback(data["callback_query"])
         return {"ok": True}
 
     message = data.get("message", {})
@@ -117,6 +122,76 @@ async def telegram_webhook(request: Request):
 # ──────────────────────────────────────────────
 # Komut fonksiyonları
 # ──────────────────────────────────────────────
+
+async def handle_callback(cbq: dict):
+    """Inline buton callback'lerini işle."""
+    s = get_settings()
+    cbq_id   = cbq.get("id", "")
+    chat_id  = str(cbq.get("from", {}).get("id", ""))
+    msg_id   = cbq.get("message", {}).get("message_id")
+    data_str = cbq.get("data", "")
+
+    if chat_id != str(s.TELEGRAM_CHAT_ID):
+        await answer_callback(cbq_id, "❌ Yetkisiz")
+        return
+
+    db = get_supabase()
+
+    # ── Ödeme onayla ───────────────────────────
+    if data_str.startswith("approve_payment_"):
+        payment_id = data_str.replace("approve_payment_", "")
+        result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
+        if not result.data:
+            await answer_callback(cbq_id, "❌ Ödeme bulunamadı"); return
+        tx = result.data[0]
+        if tx["status"] != "pending":
+            await answer_callback(cbq_id, "⚠️ Zaten işlenmiş"); return
+
+        user_res = db.table("users").select("balance, email").eq("id", tx["user_id"]).limit(1).execute()
+        if not user_res.data:
+            await answer_callback(cbq_id, "❌ Kullanıcı bulunamadı"); return
+
+        new_bal = round(float(user_res.data[0]["balance"]) + float(tx["amount_tl"]), 2)
+        db.table("users").update({"balance": new_bal}).eq("id", tx["user_id"]).execute()
+        db.table("payment_transactions").update({"status": "completed"}).eq("id", payment_id).execute()
+        create_notification(tx["user_id"], "Bakiye Yüklendi 💰", f"₺{float(tx['amount_tl']):.2f} bakiyenize yüklendi.", "success")
+
+        await answer_callback(cbq_id, "✅ Onaylandı!")
+        await edit_telegram_message(
+            str(s.TELEGRAM_CHAT_ID), msg_id,
+            f"✅ <b>Ödeme Onaylandı</b>\n"
+            f"👤 {user_res.data[0]['email']}\n"
+            f"💰 ₺{float(tx['amount_tl']):.2f}\n"
+            f"🔑 Ref: {tx.get('reference_code', '')}\n"
+            f"💳 Yeni bakiye: ₺{new_bal:.2f}"
+        )
+
+    # ── Ödeme reddet ───────────────────────────
+    elif data_str.startswith("reject_payment_"):
+        payment_id = data_str.replace("reject_payment_", "")
+        result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
+        if not result.data:
+            await answer_callback(cbq_id, "❌ Ödeme bulunamadı"); return
+        tx = result.data[0]
+        if tx["status"] != "pending":
+            await answer_callback(cbq_id, "⚠️ Zaten işlenmiş"); return
+
+        db.table("payment_transactions").update({"status": "failed"}).eq("id", payment_id).execute()
+        user_res = db.table("users").select("email").eq("id", tx["user_id"]).limit(1).execute()
+        email = user_res.data[0]["email"] if user_res.data else "?"
+
+        await answer_callback(cbq_id, "❌ Reddedildi")
+        await edit_telegram_message(
+            str(s.TELEGRAM_CHAT_ID), msg_id,
+            f"❌ <b>Ödeme Reddedildi</b>\n"
+            f"👤 {email}\n"
+            f"💰 ₺{float(tx['amount_tl']):.2f}\n"
+            f"🔑 Ref: {tx.get('reference_code', '')}"
+        )
+
+    else:
+        await answer_callback(cbq_id)
+
 
 async def cmd_stats(chat_id: str):
     db = get_supabase()

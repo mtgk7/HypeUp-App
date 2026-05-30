@@ -5,6 +5,7 @@ from app.database import get_supabase
 from app.utils.auth import hash_password, verify_password, create_token, get_current_user
 from app.config import get_settings
 from app.routers.notifications import create_notification
+from app.services.telegram_service import send_telegram
 import secrets
 
 
@@ -60,6 +61,16 @@ async def register(body: RegisterRequest):
                 f"Davet ettiğin kişi kayıt oldu! ₺{bonus:.0f} bonus hesabına eklendi.",
                 "success",
             )
+
+    # Telegram bildirimi — yeni kayıt
+    import asyncio
+    ref_text = f"🔗 Referansla geldi" if referrer_id else "🆕 Direkt kayıt"
+    bonus_text = f" (+₺{s.REFERRAL_BONUS_TL:.0f} bonus)" if referrer_id else f" (+₺50 hoş geldin)"
+    asyncio.create_task(send_telegram(
+        f"👤 <b>Yeni Kullanıcı Kaydı</b>\n"
+        f"📧 {body.email}\n"
+        f"{ref_text}{bonus_text}"
+    ))
 
     token = create_token(user["id"], user["role"])
     return TokenResponse(

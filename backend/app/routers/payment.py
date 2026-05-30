@@ -5,7 +5,7 @@ from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.config import get_settings
 from app.routers.notifications import create_notification
-from app.services.telegram_service import send_telegram
+from app.services.telegram_service import send_telegram, send_telegram_with_buttons
 import hmac
 import hashlib
 import base64
@@ -167,13 +167,19 @@ async def create_manual_payment(body: ManualPaymentRequest, user: dict = Depends
         "payment_method": "papara",
     }).execute()
 
-    await send_telegram(
-        f"💳 <b>Manuel Ödeme Bildirimi</b>\n"
+    tx_id = db.table("payment_transactions").select("id").eq("platform_order_id", ref).limit(1).execute()
+    tx_db_id = tx_id.data[0]["id"] if tx_id.data else ref
+
+    await send_telegram_with_buttons(
+        f"💳 <b>Yeni Ödeme Bildirimi</b>\n"
         f"👤 {user['email']}\n"
         f"💰 ₺{body.amount:.2f}\n"
         f"🔑 Ref: <code>{ref}</code>\n"
-        f"📝 Gönderici: {body.sender_name}\n"
-        f"➡️ Admin panelden onaylanmayı bekliyor"
+        f"📝 Gönderici: {body.sender_name}",
+        buttons=[[
+            {"text": "✅ Onayla",  "callback_data": f"approve_payment_{tx_db_id}"},
+            {"text": "❌ Reddet",  "callback_data": f"reject_payment_{tx_db_id}"},
+        ]]
     )
 
     return {"reference_code": ref, "amount": body.amount, "status": "pending"}
