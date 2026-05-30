@@ -204,14 +204,13 @@ MIN_PRICE_TL = 5.0  # 1000 adet için minimum satış fiyatı (TL)
 
 def calculate_hypeup_price(jap_dolar_per_1000: float, dolar_kuru: float | None = None) -> float:
     """
-    PRM4U'nun 1000 adet için dolar fiyatından HypeUp satış fiyatını hesapla.
+    Maliyet bazlı kademeli fiyatlandırma (1000 adet TL).
 
-    Hedef: Türkiye rakip ortalaması (TurkPaneli + SMMTurk ortası)
-      < 3 TL   maliyete × 5.0  → izlenme/traffic taban
-      3–15 TL  maliyete × 2.8  → Telegram, ucuz servisler
-      15–30 TL maliyete × 1.4  → Instagram global takipçi (~₺30)
-      30–80 TL maliyete × 2.0  → TikTok, orta segment (~₺85)
-      > 80 TL  maliyete × 4.5  → YouTube abone (~₺1000), premium
+      < 3 TL   × 5.0  → izlenme/traffic
+      3–15 TL  × 3.2  → LinkedIn, Telegram ucuz (~₺34)
+      15–30 TL × 1.75 → Instagram global takipçi (~₺40)
+      30–80 TL × 3.90 → TikTok Organik (~₺169), Instagram garantili
+      > 80 TL  × 5.0  → X, YouTube abone, premium
     """
     if dolar_kuru is None:
         dolar_kuru = get_current_rate()
@@ -221,13 +220,13 @@ def calculate_hypeup_price(jap_dolar_per_1000: float, dolar_kuru: float | None =
     if cost < 3.0:
         price = max(cost * 5.0, MIN_PRICE_TL)
     elif cost < 15.0:
-        price = cost * 2.8
+        price = cost * 3.2
     elif cost < 30.0:
-        price = cost * 1.4
+        price = cost * 1.75
     elif cost < 80.0:
-        price = cost * 2.0
+        price = cost * 3.90
     else:
-        price = cost * 4.5
+        price = cost * 5.0
 
     return round(price, 4)
 
