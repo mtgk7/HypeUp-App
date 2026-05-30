@@ -119,8 +119,8 @@ async def get_prm4u_balance(_admin: dict = Depends(require_admin)):
 @router.post("/services/sync-prm4u")
 async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
     """
-    PRM4U'dan tüm servisleri çekip veritabanına upsert et.
-    Fiyatları otomatik hesaplar. Supabase'deki jap_service_id'ler PRM4U ID'si olmalı.
+    PRM4U'dan tüm servisleri çekip veritabanına batch upsert et.
+    Kategoriler tek seferde yüklenir, servisler 200'lük gruplarla yazılır.
     """
     prm4u = get_jap_client()
     dolar_kuru = get_current_rate()
@@ -131,42 +131,55 @@ async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"PRM4U bağlantı hatası: {e}")
 
-    synced, skipped = 0, 0
+    # Tüm kategorileri tek seferde çek → platform → category_id map
+    cat_rows = db.table("categories").select("id, platform_name").execute().data
+    platform_to_cat: dict[str, str] = {}
+    for row in cat_rows:
+        platform_to_cat.setdefault(row["platform_name"], row["id"])
+
+    rows_to_upsert = []
+    skipped = 0
 
     for svc in prm4u_services:
         try:
             svc_id = int(svc.get("service") or svc.get("id", 0))
             name = svc.get("name", "")
-            rate_str = svc.get("rate", "0")
+            dolar_price = float(str(svc.get("rate", "0")).replace(",", "."))
             min_qty = int(svc.get("min", 100))
             max_qty = int(svc.get("max", 100000))
-            dolar_price = float(str(rate_str).replace(",", "."))
-
-            hypeup_tl = calculate_hypeup_price(dolar_price, dolar_kuru)
 
             platform = _guess_platform(name)
-            cat_result = db.table("categories").select("id").eq("platform_name", platform).limit(1).execute()
-            cat_id = cat_result.data[0]["id"] if cat_result.data else None
+            cat_id = platform_to_cat.get(platform)
             if not cat_id:
                 skipped += 1
                 continue
 
-            db.table("services").upsert({
+            rows_to_upsert.append({
                 "jap_service_id": svc_id,
                 "category_id": cat_id,
                 "service_name": name,
                 "jap_dolar_price": dolar_price,
-                "hypeup_tl_price": hypeup_tl,
+                "hypeup_tl_price": calculate_hypeup_price(dolar_price, dolar_kuru),
                 "min_order": min_qty,
                 "max_order": max_qty,
                 "description": svc.get("description", ""),
                 "is_active": True,
-            }, on_conflict="jap_service_id").execute()
-
-            synced += 1
+            })
         except Exception as e:
-            logger.warning(f"[SyncPRM4U] Servis atlandı: {e}")
+            logger.warning(f"[SyncPRM4U] Servis parse hatası: {e}")
             skipped += 1
+
+    # Batch upsert — 200'lük gruplar
+    BATCH = 200
+    synced = 0
+    for i in range(0, len(rows_to_upsert), BATCH):
+        chunk = rows_to_upsert[i:i + BATCH]
+        try:
+            db.table("services").upsert(chunk, on_conflict="jap_service_id").execute()
+            synced += len(chunk)
+        except Exception as e:
+            logger.warning(f"[SyncPRM4U] Batch yazma hatası: {e}")
+            skipped += len(chunk)
 
     return {"synced": synced, "skipped": skipped, "dolar_kuru": dolar_kuru}
 
