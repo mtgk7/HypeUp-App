@@ -28,7 +28,7 @@ const QUICK_PICKS = [
   { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 20,   qty: 10000, emoji: "👁️" },
   { label: "TikTok Hikaye",     platform: "TikTok",    nameContains: "story views",            maxPrice: 100,  qty: 1000,  emoji: "🎵" },
   { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 50,   qty: 10000, emoji: "🎬" },
-  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "subscriber",             maxPrice: 10000, qty: 100,  emoji: "▶️" },
+  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "aboneleri",              maxPrice: 5000, qty: 100,  emoji: "▶️" },
   { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 50,   qty: 1000,  emoji: "✈️" },
   { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 20,   qty: 5000,  emoji: "🎵" },
 ];
