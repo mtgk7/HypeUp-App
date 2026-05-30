@@ -23,14 +23,14 @@ const LINK_PLACEHOLDER: Record<string, string> = {
 // nameContains: servis adında geçmesi gereken kesin metin (küçük harf)
 // maxPrice: bu fiyatın üzerindeki servisleri atla (₺/1000)
 const QUICK_PICKS = [
-  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",        maxPrice: 50,   qty: 1000,  emoji: "📸" },
-  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill",      maxPrice: 20,   qty: 1000,  emoji: "❤️" },
-  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",       maxPrice: 20,   qty: 10000, emoji: "👁️" },
-  { label: "TikTok Takipçi",    platform: "TikTok",    nameContains: "organik",                     maxPrice: 300,  qty: 500,   emoji: "🎵" },
-  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",               maxPrice: 50,   qty: 10000, emoji: "🎬" },
-  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "subscribers",                 maxPrice: 2000, qty: 100,   emoji: "▶️" },
-  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",                  maxPrice: 50,   qty: 1000,  emoji: "✈️" },
-  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",                  maxPrice: 20,   qty: 5000,  emoji: "🎵" },
+  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",   maxPrice: 50,   qty: 1000,  emoji: "📸" },
+  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill", maxPrice: 20,   qty: 1000,  emoji: "❤️" },
+  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 20,   qty: 10000, emoji: "👁️" },
+  { label: "TikTok Hikaye",     platform: "TikTok",    nameContains: "story views",            maxPrice: 100,  qty: 1000,  emoji: "🎵" },
+  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 50,   qty: 10000, emoji: "🎬" },
+  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "subscriber",             maxPrice: 10000, qty: 100,  emoji: "▶️" },
+  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 50,   qty: 1000,  emoji: "✈️" },
+  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 20,   qty: 5000,  emoji: "🎵" },
 ];
 
 export default function NewOrderPage() {
@@ -95,8 +95,7 @@ export default function NewOrderPage() {
       return matchesName && underMax;
     });
     const sorted = filtered.sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price);
-    // Bulunamazsa platforma göre en ucuz aktif servisi döndür
-    return sorted[0] ?? plat.sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price)[0] ?? null;
+    return sorted[0] ?? null;
   }
 
   // Hızlı sipariş: platforma git, servisi seç, adeti ayarla
