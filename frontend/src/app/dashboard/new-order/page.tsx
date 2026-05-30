@@ -20,17 +20,17 @@ const LINK_PLACEHOLDER: Record<string, string> = {
 };
 
 // Hızlı sipariş şablonları
-// keywords: servis adında olması gereken kelimeler (AND = hepsi olmak zorunda değil, OR)
-// exclude: bu kelimeler varsa atla
+// nameContains: servis adında geçmesi gereken kesin metin (küçük harf)
+// maxPrice: bu fiyatın üzerindeki servisleri atla (₺/1000)
 const QUICK_PICKS = [
-  { label: "Instagram Takipçi",  platform: "Instagram", keywords: ["followers","takip"], exclude: ["traffic","comment","like","view","story","reel"], qty: 1000, emoji: "📸" },
-  { label: "Instagram Beğeni",   platform: "Instagram", keywords: ["likes","post like"],  exclude: ["traffic","comment","follow","view","story"],     qty: 1000, emoji: "❤️" },
-  { label: "TikTok Takipçi",     platform: "TikTok",    keywords: ["followers","takip"],  exclude: ["traffic","view","like","comment"],                qty: 1000, emoji: "🎵" },
-  { label: "TikTok İzlenme",     platform: "TikTok",    keywords: ["views","video view"], exclude: ["traffic","follower","like","comment"],             qty: 5000, emoji: "👁️" },
-  { label: "YouTube Abone",      platform: "YouTube",   keywords: ["subscribers"],        exclude: ["traffic","view","like","comment","watch"],         qty: 500,  emoji: "▶️" },
-  { label: "YouTube İzlenme",    platform: "YouTube",   keywords: ["views","video views"],exclude: ["traffic","subscriber","live","watch hour"],         qty: 5000, emoji: "🎬" },
-  { label: "Telegram Üye",       platform: "Telegram",  keywords: ["members"],            exclude: ["traffic","view","post"],                           qty: 1000, emoji: "✈️" },
-  { label: "X Takipçi",          platform: "X",         keywords: ["followers"],          exclude: ["traffic","like","retweet","view","comment"],        qty: 1000, emoji: "🐦" },
+  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",        maxPrice: 50,   qty: 1000,  emoji: "📸" },
+  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill",      maxPrice: 20,   qty: 1000,  emoji: "❤️" },
+  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",       maxPrice: 20,   qty: 10000, emoji: "👁️" },
+  { label: "TikTok Takipçi",    platform: "TikTok",    nameContains: "organik",                     maxPrice: 300,  qty: 500,   emoji: "🎵" },
+  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",               maxPrice: 50,   qty: 10000, emoji: "🎬" },
+  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "subscribers",                 maxPrice: 2000, qty: 100,   emoji: "▶️" },
+  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",                  maxPrice: 50,   qty: 1000,  emoji: "✈️" },
+  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",                  maxPrice: 20,   qty: 5000,  emoji: "🎵" },
 ];
 
 export default function NewOrderPage() {
@@ -87,15 +87,16 @@ export default function NewOrderPage() {
 
   function findBestService(pick: typeof QUICK_PICKS[0], services: Service[]): Service | null {
     const plat = services.filter(s => s.platform_name === pick.platform);
+    // Kesin isim eşleştirmesi + max fiyat sınırı
     const filtered = plat.filter(s => {
       const n = s.service_name.toLowerCase();
-      const hasKeyword = pick.keywords.some(kw => n.includes(kw));
-      const hasExclude = (pick.exclude ?? []).some(ex => n.includes(ex));
-      return hasKeyword && !hasExclude;
+      const matchesName = n.includes(pick.nameContains.toLowerCase());
+      const underMax = s.hypeup_tl_price <= pick.maxPrice;
+      return matchesName && underMax;
     });
-    // Ucuzdan pahalıya sırala, en ucuzu seç
     const sorted = filtered.sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price);
-    return sorted[0] ?? plat[0] ?? null;
+    // Bulunamazsa platforma göre en ucuz aktif servisi döndür
+    return sorted[0] ?? plat.sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price)[0] ?? null;
   }
 
   // Hızlı sipariş: platforma git, servisi seç, adeti ayarla
