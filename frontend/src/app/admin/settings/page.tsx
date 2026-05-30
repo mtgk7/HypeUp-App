@@ -12,6 +12,8 @@ export default function AdminSettingsPage() {
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
   const [kurMsg, setKurMsg] = useState("");
+  const [manualKur, setManualKur] = useState("");
+  const [settingKur, setSettingKur] = useState(false);
   const [prm4uBalance, setPrm4uBalance] = useState<string | null>(null);
   const [balanceLoading, setBalanceLoading] = useState(false);
 
@@ -38,6 +40,22 @@ export default function AdminSettingsPage() {
       setKurMsg("Kur güncellenemedi");
     } finally {
       setRefreshing(false);
+    }
+  }
+
+  async function setManualRate() {
+    const rate = parseFloat(manualKur);
+    if (!rate || rate < 1 || rate > 500) { setKurMsg("Geçersiz kur değeri"); return; }
+    setSettingKur(true); setKurMsg("");
+    try {
+      const res = await adminApi.setCurrency(rate);
+      await loadStats();
+      setKurMsg(`Kur ₺${rate} olarak ayarlandı. ${res.data.updated_services} servis fiyatı güncellendi.`);
+      setManualKur("");
+    } catch {
+      setKurMsg("Kur güncellenemedi");
+    } finally {
+      setSettingKur(false);
     }
   }
 
@@ -99,6 +117,32 @@ export default function AdminSettingsPage() {
             </button>
           </div>
         )}
+
+        {/* Manuel kur girişi */}
+        <div className="mt-4 pt-4 border-t border-white/8">
+          <p className="text-xs text-white/30 mb-2">Manuel kur gir — tüm servis fiyatları otomatik güncellenir</p>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">₺</span>
+              <input
+                type="number"
+                min="1" max="500" step="0.01"
+                placeholder={stats?.dolar_kuru?.toFixed(2) ?? "45.91"}
+                value={manualKur}
+                onChange={e => setManualKur(e.target.value)}
+                className="bg-white/5 border border-white/10 rounded-xl pl-7 pr-3 py-2.5 text-sm w-32 focus:outline-none focus:border-orange-500/50"
+              />
+            </div>
+            <button
+              onClick={setManualRate}
+              disabled={settingKur || !manualKur}
+              className="flex items-center gap-2 bg-orange-600/20 border border-orange-500/30 text-orange-400 hover:bg-orange-600/30 disabled:opacity-50 px-4 py-2.5 rounded-xl text-sm transition"
+            >
+              {settingKur ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+              {settingKur ? "Güncelleniyor..." : "Uygula ve Fiyatları Güncelle"}
+            </button>
+          </div>
+        </div>
 
         {kurMsg && (
           <p className="text-xs mt-3 text-green-400 flex items-center gap-1">

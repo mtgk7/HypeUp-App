@@ -69,13 +69,45 @@ async def update_balance(body: UserBalanceUpdate, _admin: dict = Depends(require
 
 @router.post("/currency/refresh", response_model=CurrencyRateResponse)
 async def refresh_rate(_admin: dict = Depends(require_admin)):
-    """Döviz kurunu manuel olarak güncelle."""
+    """Döviz kurunu API'den çekip güncelle."""
     rate = await refresh_currency_rate()
     return CurrencyRateResponse(
         rate=rate,
         source="API",
         updated_at=datetime.now(timezone.utc),
     )
+
+
+@router.post("/currency/set")
+async def set_rate_manual(body: dict, _admin: dict = Depends(require_admin)):
+    """
+    Dolar kurunu manuel olarak gir ve tüm servis fiyatlarını yeniden hesapla.
+    body: { "rate": 47.50 }
+    """
+    rate = float(body.get("rate", 0))
+    if rate < 1 or rate > 500:
+        raise HTTPException(status_code=400, detail="Geçersiz kur değeri")
+
+    db = get_supabase()
+    # Kuru kaydet
+    db.table("settings").upsert({"key": "dolar_kuru", "value": str(rate)}).execute()
+
+    # Tüm aktif servislerin fiyatını yeniden hesapla
+    from app.services.pricing_service import calculate_hypeup_price
+    services = db.table("services").select("id, jap_dolar_price").eq("is_active", True).execute().data
+    updated = 0
+    BATCH = 200
+    rows = []
+    for svc in services:
+        if not svc.get("jap_dolar_price"):
+            continue
+        new_price = calculate_hypeup_price(float(svc["jap_dolar_price"]), rate)
+        rows.append({"id": svc["id"], "hypeup_tl_price": new_price})
+    for i in range(0, len(rows), BATCH):
+        db.table("services").upsert(rows[i:i+BATCH]).execute()
+        updated += len(rows[i:i+BATCH])
+
+    return {"rate": rate, "updated_services": updated}
 
 
 @router.get("/prm4u/services")
