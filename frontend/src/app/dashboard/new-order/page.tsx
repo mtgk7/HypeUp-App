@@ -5,7 +5,7 @@ import { servicesApi, ordersApi } from "@/lib/api";
 import { Service } from "@/types";
 import { Loader2, ShoppingCart, TrendingUp, Zap, ChevronRight } from "lucide-react";
 
-const PLATFORMS = ["Instagram", "TikTok", "YouTube", "X", "Telegram", "Facebook", "Spotify", "Discord", "Pinterest"];
+const PLATFORMS = ["Instagram", "TikTok", "YouTube", "X", "Telegram", "Facebook", "Spotify", "Discord"];
 
 const LINK_PLACEHOLDER: Record<string, string> = {
   Instagram:  "https://instagram.com/kullanici",
