@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from app.models.schemas import PaymentInitRequest, PaymentInitResponse, PaymentTransactionOut
+from app.models.schemas import PaymentInitRequest, PaymentInitResponse, PaymentTransactionOut, ManualPaymentRequest
 from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.config import get_settings
@@ -141,6 +141,42 @@ async def shopier_callback(request: Request):
         logger.info(f"[Payment] Başarısız: {platform_order_id}")
 
     return JSONResponse(content={"message": "ok"})
+
+
+# ──────────────────────────────────────────────
+# Manuel ödeme (Papara/Havale)
+# ──────────────────────────────────────────────
+@router.post("/manual")
+async def create_manual_payment(body: ManualPaymentRequest, user: dict = Depends(get_current_user)):
+    if body.amount < 10:
+        raise HTTPException(status_code=400, detail="Minimum yükleme miktarı ₺10")
+    if body.amount > 10000:
+        raise HTTPException(status_code=400, detail="Maksimum yükleme miktarı ₺10.000")
+
+    db = get_supabase()
+    ref = "HP-" + uuid.uuid4().hex[:6].upper()
+
+    db.table("payment_transactions").insert({
+        "id": str(uuid.uuid4()),
+        "user_id": user["id"],
+        "amount_tl": body.amount,
+        "status": "pending",
+        "platform_order_id": ref,
+        "reference_code": ref,
+        "sender_name": body.sender_name,
+        "payment_method": "papara",
+    }).execute()
+
+    await send_telegram(
+        f"💳 <b>Manuel Ödeme Bildirimi</b>\n"
+        f"👤 {user['email']}\n"
+        f"💰 ₺{body.amount:.2f}\n"
+        f"🔑 Ref: <code>{ref}</code>\n"
+        f"📝 Gönderici: {body.sender_name}\n"
+        f"➡️ Admin panelden onaylanmayı bekliyor"
+    )
+
+    return {"reference_code": ref, "amount": body.amount, "status": "pending"}
 
 
 # ──────────────────────────────────────────────

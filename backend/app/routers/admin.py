@@ -332,6 +332,43 @@ async def list_all_payments(_admin: dict = Depends(require_admin)):
     return payments
 
 
+@router.post("/payments/{payment_id}/approve")
+async def approve_payment(payment_id: str, _admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Ödeme bulunamadı")
+    tx = result.data[0]
+    if tx["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Bu ödeme zaten işlenmiş")
+
+    user_res = db.table("users").select("balance").eq("id", tx["user_id"]).limit(1).execute()
+    if not user_res.data:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+
+    new_balance = round(float(user_res.data[0]["balance"]) + float(tx["amount_tl"]), 2)
+    db.table("users").update({"balance": new_balance}).eq("id", tx["user_id"]).execute()
+    db.table("payment_transactions").update({"status": "completed"}).eq("id", payment_id).execute()
+
+    from app.routers.notifications import create_notification
+    from app.services.telegram_service import send_telegram
+    create_notification(tx["user_id"], "Bakiye Yüklendi 💰", f"₺{float(tx['amount_tl']):.2f} bakiyenize yüklendi.", "success")
+    await send_telegram(f"✅ Ödeme onaylandı: ₺{float(tx['amount_tl']):.2f} — Ref: {tx.get('reference_code','')}")
+    return {"status": "completed", "new_balance": new_balance}
+
+
+@router.post("/payments/{payment_id}/reject")
+async def reject_payment(payment_id: str, _admin: dict = Depends(require_admin)):
+    db = get_supabase()
+    result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Ödeme bulunamadı")
+    if result.data[0]["status"] != "pending":
+        raise HTTPException(status_code=400, detail="Bu ödeme zaten işlenmiş")
+    db.table("payment_transactions").update({"status": "failed"}).eq("id", payment_id).execute()
+    return {"status": "failed"}
+
+
 @router.patch("/users/{user_id}/toggle")
 async def toggle_user_status(user_id: str, _admin: dict = Depends(require_admin)):
     db = get_supabase()

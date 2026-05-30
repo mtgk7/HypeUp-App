@@ -80,6 +80,8 @@ export const notificationsApi = {
 export const paymentApi = {
   initShopier: (amount: number) =>
     api.post("/payment/shopier/init", { amount }),
+  manual: (amount: number, sender_name: string) =>
+    api.post("/payment/manual", { amount, sender_name }),
   history: () => api.get("/payment/history"),
 };
 
@@ -110,4 +112,6 @@ export const adminApi = {
     api.patch(`/admin/services/${service_id}`, data),
   // Ödemeler
   payments: () => api.get("/admin/payments"),
+  approvePayment: (id: string) => api.post(`/admin/payments/${id}/approve`),
+  rejectPayment: (id: string) => api.post(`/admin/payments/${id}/reject`),
 };

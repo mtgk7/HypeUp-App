@@ -151,7 +151,15 @@ class PaymentTransactionOut(BaseModel):
     status: Literal["pending", "completed", "failed"]
     platform_order_id: str
     shopier_payment_id: Optional[str] = None
+    sender_name: Optional[str] = None
+    reference_code: Optional[str] = None
+    payment_method: Optional[str] = "shopier"
     created_at: datetime
+
+
+class ManualPaymentRequest(BaseModel):
+    amount: float
+    sender_name: str
 
 
 # ──────────────────────────────────────────────

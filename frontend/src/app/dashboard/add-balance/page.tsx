@@ -1,139 +1,200 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Wallet, Zap, ChevronRight, Loader2, ShieldCheck, CreditCard } from "lucide-react";
+import { useState } from "react";
+import { Wallet, Copy, Check, Loader2, ChevronRight, Zap, CheckCircle } from "lucide-react";
 import { paymentApi } from "@/lib/api";
 
 const PRESETS = [50, 100, 200, 500, 1000];
+const PAPARA_NO = "1773332769";
 
 export default function AddBalancePage() {
+  const [step, setStep] = useState<"amount" | "info" | "done">("amount");
   const [selected, setSelected] = useState<number | null>(100);
   const [custom, setCustom] = useState("");
+  const [senderName, setSenderName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
+  const [refCode, setRefCode] = useState("");
+  const [copied, setCopied] = useState<string | null>(null);
 
   const amount = custom ? parseFloat(custom) : selected;
 
-  async function handlePayment() {
-    if (!amount || isNaN(amount) || amount < 10) {
-      setError("Minimum yükleme miktarı ₺10");
-      return;
-    }
-    if (amount > 10000) {
-      setError("Maksimum yükleme miktarı ₺10.000");
-      return;
-    }
+  function copy(text: string, key: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  }
 
-    setError("");
-    setLoading(true);
-
+  async function submitPayment() {
+    if (!senderName.trim()) { setError("Papara'da görünen adınızı girin"); return; }
+    if (!amount || isNaN(amount) || amount < 10) { setError("Minimum ₺10"); return; }
+    setError(""); setLoading(true);
     try {
-      const res = await paymentApi.initShopier(amount);
-      const { shopier_url, form_fields } = res.data;
-
-      // Shopier'a gizli form ile yönlendir
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = shopier_url;
-
-      Object.entries(form_fields).forEach(([key, value]) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = String(value);
-        form.appendChild(input);
-      });
-
-      document.body.appendChild(form);
-      form.submit();
+      const res = await paymentApi.manual(amount, senderName.trim());
+      setRefCode(res.data.reference_code);
+      setStep("done");
     } catch {
-      setError("Ödeme başlatılamadı. Lütfen tekrar deneyin.");
+      setError("İşlem başlatılamadı, tekrar deneyin.");
+    } finally {
       setLoading(false);
     }
   }
 
+  if (step === "done") {
+    return (
+      <div className="max-w-lg">
+        <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-8 text-center">
+          <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+          <h2 className="text-xl font-bold mb-2">Talebiniz Alındı</h2>
+          <p className="text-white/40 text-sm mb-6">Ödemenizi onayladıktan sonra bakiyeniz yüklenecektir.</p>
+          <div className="bg-[#111] border border-white/8 rounded-xl p-4 text-left space-y-3 mb-6">
+            <div className="flex items-center justify-between">
+              <span className="text-white/40 text-xs">Papara No</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-semibold">{PAPARA_NO}</span>
+                <button onClick={() => copy(PAPARA_NO, "papara")} className="text-violet-400 hover:text-violet-300">
+                  {copied === "papara" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/40 text-xs">Miktar</span>
+              <span className="font-bold text-white">₺{amount?.toFixed(2)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-white/40 text-xs">Açıklama / Not</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono font-semibold text-violet-300">{refCode}</span>
+                <button onClick={() => copy(refCode, "ref")} className="text-violet-400 hover:text-violet-300">
+                  {copied === "ref" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-yellow-400/70">
+            ⚠️ Papara transferinde açıklama/not kısmına referans kodunu yazmayı unutmayın.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "info") {
+    return (
+      <div className="max-w-lg">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-violet-400" /> Bakiye Yükle
+          </h1>
+          <p className="text-white/30 text-sm mt-1">Papara ile ₺{amount?.toFixed(2)} yükleme</p>
+        </div>
+
+        <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4 space-y-4">
+          <div className="flex items-center justify-between py-2 border-b border-white/5">
+            <span className="text-white/40 text-sm">Papara No</span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono font-semibold">{PAPARA_NO}</span>
+              <button onClick={() => copy(PAPARA_NO, "papara")} className="text-violet-400 hover:text-violet-300 transition">
+                {copied === "papara" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+          <div className="flex items-center justify-between py-2 border-b border-white/5">
+            <span className="text-white/40 text-sm">Gönderilecek Miktar</span>
+            <span className="font-bold text-white">₺{amount?.toFixed(2)}</span>
+          </div>
+          <p className="text-xs text-white/30 pt-1">
+            Transferi yaptıktan sonra aşağıdaki formu doldurun.
+            Papara'da görünen adınızı girin — onay için kullanılır.
+          </p>
+        </div>
+
+        <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4">
+          <label className="text-xs text-white/40 uppercase tracking-widest block mb-3">
+            Papara'da Görünen Adınız
+          </label>
+          <input
+            type="text"
+            placeholder="Örn: Ahmet Y."
+            value={senderName}
+            onChange={e => { setSenderName(e.target.value); setError(""); }}
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50"
+          />
+          {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
+        </div>
+
+        <button
+          onClick={submitPayment}
+          disabled={loading || !senderName.trim()}
+          className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-3.5 rounded-xl font-semibold transition"
+        >
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Gönderiliyor...</> : <><Check className="w-4 h-4" /> Ödeme Yaptım</>}
+        </button>
+
+        <button onClick={() => setStep("amount")} className="w-full mt-3 text-sm text-white/30 hover:text-white/60 transition py-2">
+          ← Geri
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-lg">
-      {/* Başlık */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Wallet className="w-5 h-5 text-violet-400" />
-          Bakiye Yükle
+          <Wallet className="w-5 h-5 text-violet-400" /> Bakiye Yükle
         </h1>
-        <p className="text-white/30 text-sm mt-1">Hesabına TL bakiye ekle</p>
+        <p className="text-white/30 text-sm mt-1">Papara ile anında bakiye ekle</p>
       </div>
 
-      {/* Miktar seçimi */}
       <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4">
         <p className="text-xs text-white/40 uppercase tracking-widest mb-4">Miktar seç</p>
-
         <div className="grid grid-cols-3 gap-2 mb-4">
           {PRESETS.map((p) => (
-            <button
-              key={p}
-              onClick={() => { setSelected(p); setCustom(""); setError(""); }}
+            <button key={p} onClick={() => { setSelected(p); setCustom(""); setError(""); }}
               className={`py-3 rounded-xl text-sm font-semibold border transition ${
                 selected === p && !custom
                   ? "bg-violet-600/20 border-violet-500/50 text-violet-300"
                   : "bg-white/3 border-white/8 text-white/60 hover:text-white hover:bg-white/8"
-              }`}
-            >
+              }`}>
               ₺{p}
             </button>
           ))}
         </div>
-
         <div className="relative">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">₺</span>
-          <input
-            type="number"
-            min="10"
-            max="10000"
-            placeholder="Özel miktar gir..."
-            value={custom}
-            onChange={(e) => { setCustom(e.target.value); setSelected(null); setError(""); }}
+          <input type="number" min="10" max="10000" placeholder="Özel miktar..."
+            value={custom} onChange={e => { setCustom(e.target.value); setSelected(null); setError(""); }}
             className="w-full bg-white/5 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50"
           />
         </div>
-
-        {error && (
-          <p className="text-red-400 text-xs mt-3">{error}</p>
-        )}
+        {error && <p className="text-red-400 text-xs mt-3">{error}</p>}
       </div>
 
-      {/* Özet */}
       {amount && !isNaN(amount) && amount >= 10 && (
         <div className="bg-violet-600/10 border border-violet-500/20 rounded-2xl p-5 mb-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between">
             <span className="text-sm text-white/50">Yüklenecek miktar</span>
             <span className="text-xl font-bold text-white">₺{amount.toFixed(2)}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-white/30">
-            <ShieldCheck className="w-3.5 h-3.5 text-green-400" />
-            Shopier güvenceli ödeme · SSL şifreli
           </div>
         </div>
       )}
 
-      {/* Ödeme butonu */}
       <button
-        onClick={handlePayment}
-        disabled={loading || !amount || isNaN(amount) || amount < 10}
+        onClick={() => {
+          if (!amount || isNaN(amount) || amount < 10) { setError("Minimum yükleme ₺10"); return; }
+          if (amount > 10000) { setError("Maksimum yükleme ₺10.000"); return; }
+          setError(""); setStep("info");
+        }}
+        disabled={!amount || isNaN(Number(amount)) || Number(amount) < 10}
         className="w-full flex items-center justify-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed px-6 py-3.5 rounded-xl font-semibold transition"
       >
-        {loading ? (
-          <><Loader2 className="w-4 h-4 animate-spin" /> Shopier'a yönlendiriliyor...</>
-        ) : (
-          <><CreditCard className="w-4 h-4" /> Ödeme Yap<ChevronRight className="w-4 h-4" /></>
-        )}
+        Devam Et <ChevronRight className="w-4 h-4" />
       </button>
 
-      {/* Bilgi notu */}
       <div className="mt-6 flex items-start gap-2 text-xs text-white/20">
         <Zap className="w-3.5 h-3.5 mt-0.5 shrink-0 text-violet-400/40" />
-        Ödeme onaylandıktan sonra bakiyeniz otomatik olarak hesabınıza yansır.
-        Shopier üzerinden kredi kartı, banka kartı ile ödeme yapabilirsiniz.
+        Ödemeniz onaylandıktan sonra bakiyeniz hesabınıza yansır. Ortalama onay süresi: 5-15 dakika.
       </div>
     </div>
   );
