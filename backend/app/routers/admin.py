@@ -331,13 +331,24 @@ async def toggle_user_status(user_id: str, _admin: dict = Depends(require_admin)
 
 
 def _guess_platform(name: str) -> str:
-    name_lower = name.lower()
-    if "instagram" in name_lower:
-        return "Instagram"
-    elif "tiktok" in name_lower or "tik tok" in name_lower:
-        return "TikTok"
-    elif "youtube" in name_lower:
-        return "YouTube"
-    elif "twitter" in name_lower or " x " in name_lower:
-        return "X"
-    return "Instagram"  # varsayılan
+    n = name.lower()
+    if "instagram" in n:            return "Instagram"
+    if "tiktok" in n or "tik tok" in n: return "TikTok"
+    if "youtube" in n:              return "YouTube"
+    if "twitter" in n or "x follow" in n or "x like" in n or "x view" in n or "x retweet" in n: return "X"
+    if "telegram" in n:             return "Telegram"
+    if "facebook" in n:             return "Facebook"
+    if "spotify" in n:              return "Spotify"
+    if "threads" in n:              return "Threads"
+    if "discord" in n:              return "Discord"
+    if "linkedin" in n:             return "LinkedIn"
+    if "pinterest" in n:            return "Pinterest"
+    if "reddit" in n:               return "Reddit"
+    if "snapchat" in n:             return "Snapchat"
+    if "twitch" in n:               return "Twitch"
+    if "soundcloud" in n:           return "SoundCloud"
+    if " vk " in n or n.startswith("vk ") or "vk." in n: return "VK"
+    if "kick.com" in n or "kick follow" in n or "kick view" in n: return "Kick"
+    if "shazam" in n:               return "Shazam"
+    if "apple" in n or "itunes" in n or "app store" in n: return "Apple"
+    return "Diger"
