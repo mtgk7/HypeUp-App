@@ -382,7 +382,7 @@ export default function LandingPage() {
           {[
             { n: "1", title: "Kayıt Ol",         body: "E-posta ile kayıt ol, 50 TL bonus bakiyeni al. 30 saniye sürer." },
             { n: "2", title: "Servis Seç",        body: "Platform ve hizmet seç. Linki gir, adet belirle, anlık fiyat gör." },
-            { n: "3", title: "Otomatik Teslim",   body: "Siparişin PRM4U altyapısına iletilir, büyümen hemen başlar." },
+            { n: "3", title: "Otomatik Teslim",   body: "Sipariş sistemimize iletilir, büyümen hemen başlar." },
           ].map(({ n, title, body }) => (
             <div key={n} className="flex gap-4">
               <div className="flex-shrink-0 w-9 h-9 rounded-full bg-violet-600/20 border border-violet-500/30 flex items-center justify-center font-black text-sm text-violet-300">{n}</div>
