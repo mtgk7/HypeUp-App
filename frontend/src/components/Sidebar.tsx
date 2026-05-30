@@ -52,15 +52,15 @@ export default function Sidebar({ role = "user", balance = 0, email = "" }: Side
 
   const sidebarContent = (
     <aside className="w-64 h-full bg-[#111] border-r border-white/10 flex flex-col p-4 overflow-y-auto">
-      {/* Logo */}
-      <div className="flex items-center gap-2 mb-8 px-2">
-        <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center">
+      {/* Logo — tıklayınca ana panele döner */}
+      <Link href={role === "admin" ? "/admin" : "/dashboard"} className="flex items-center gap-2 mb-8 px-2 group">
+        <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center group-hover:bg-violet-500 transition">
           <Zap className="w-4 h-4 text-white" fill="white" />
         </div>
         <span className="text-lg font-bold bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">
           HypeUp
         </span>
-      </div>
+      </Link>
 
       {/* Bakiye (sadece user) */}
       {role === "user" && (

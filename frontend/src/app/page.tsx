@@ -86,10 +86,26 @@ export default function LandingPage() {
   const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
-    servicesApi.public()
-      .then(res => setServices(res.data))
-      .catch(() => {})
-      .finally(() => setLoadingSvc(false));
+    let cancelled = false;
+    (async () => {
+      // Backend uyuyorsa cold-start olabilir — 90 sn boyunca 8 sn'de bir dene
+      const start = Date.now();
+      while (!cancelled && Date.now() - start < 90000) {
+        try {
+          const res = await servicesApi.public();
+          if (!cancelled && Array.isArray(res.data) && res.data.length > 0) {
+            setServices(res.data);
+            setLoadingSvc(false);
+            return;
+          }
+        } catch {
+          // backend uyanıyor, tekrar dene
+        }
+        await new Promise(r => setTimeout(r, 8000));
+      }
+      if (!cancelled) setLoadingSvc(false);
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const filtered = activePlatform === "Hepsi" ? services : services.filter(s => s.platform_name === activePlatform);
