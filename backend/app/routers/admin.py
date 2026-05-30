@@ -94,6 +94,8 @@ async def set_rate_manual(body: dict, _admin: dict = Depends(require_admin)):
 
     # Servis fiyat güncellemesini arka planda çalıştır (timeout olmadan)
     import asyncio
+    from app.services.telegram_service import send_telegram as _tg
+
     async def _update_prices():
         from app.services.pricing_service import calculate_hypeup_price
         svcs = db.table("services").select("id, jap_dolar_price").eq("is_active", True).execute().data
@@ -106,6 +108,11 @@ async def set_rate_manual(body: dict, _admin: dict = Depends(require_admin)):
         for i in range(0, len(rows), BATCH):
             db.table("services").upsert(rows[i:i+BATCH]).execute()
         logger.info(f"[KurSet] {len(rows)} servis fiyatı güncellendi @ ₺{rate}")
+        await _tg(
+            f"✅ <b>Kur Güncellendi</b>\n"
+            f"💱 Yeni kur: ₺{rate}\n"
+            f"🔄 {len(rows)} servis fiyatı güncellendi"
+        )
 
     asyncio.create_task(_update_prices())
 
