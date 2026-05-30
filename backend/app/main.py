@@ -7,7 +7,7 @@ import httpx
 
 from app.config import get_settings
 from app.routers import auth, services, orders, admin, payment, notifications, telegram_bot
-from app.services.currency_service import refresh_currency_rate, get_current_rate
+from app.services.currency_service import get_current_rate
 from app.services.jap_sync_service import sync_order_statuses
 from app.services.pricing_service import calculate_hypeup_price
 from app.services.jap_service import get_jap_client
@@ -165,7 +165,12 @@ async def order_sync_loop():
 
 
 async def twice_daily_sync_loop():
-    """Günde 2 kez (12 saatte bir) full sync yap."""
+    """
+    Günde 2 kez (12 saatte bir) full sync yap.
+    Kur kontrolü smart_rate_check içinde yapılır:
+      - Piyasa kuru >= bizim kur → kur × 1.04 uygula + fiyatları güncelle + bildirim
+      - Piyasa kuru < bizim kur → dokunma (manuel kuru koru)
+    """
     while True:
         await asyncio.sleep(60 * 60 * 12)
         await full_sync()
@@ -173,14 +178,8 @@ async def twice_daily_sync_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Başlangıçta kuru güncelle
-    try:
-        rate = await refresh_currency_rate()
-        logger.info(f"[Startup] Başlangıç döviz kuru: {rate}")
-    except Exception as e:
-        logger.warning(f"[Startup] Döviz kuru alınamadı: {e}")
-
-    # Startup: akıllı kur kontrolü + servis sync
+    # Startup: arka planda full sync (kur kontrolü dahil)
+    # NOT: currency_refresh_loop kaldırıldı — smart_rate_check yönetiyor
     asyncio.create_task(full_sync())
 
     # Arka plan döngüler

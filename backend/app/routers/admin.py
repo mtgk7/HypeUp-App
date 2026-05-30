@@ -89,25 +89,28 @@ async def set_rate_manual(body: dict, _admin: dict = Depends(require_admin)):
         raise HTTPException(status_code=400, detail="Geçersiz kur değeri")
 
     db = get_supabase()
-    # Kuru kaydet
+    # Kuru hemen kaydet
     db.table("settings").upsert({"key": "dolar_kuru", "value": str(rate)}, on_conflict="key").execute()
 
-    # Tüm aktif servislerin fiyatını yeniden hesapla
-    from app.services.pricing_service import calculate_hypeup_price
-    services = db.table("services").select("id, jap_dolar_price").eq("is_active", True).execute().data
-    updated = 0
-    BATCH = 200
-    rows = []
-    for svc in services:
-        if not svc.get("jap_dolar_price"):
-            continue
-        new_price = calculate_hypeup_price(float(svc["jap_dolar_price"]), rate)
-        rows.append({"id": svc["id"], "hypeup_tl_price": new_price})
-    for i in range(0, len(rows), BATCH):
-        db.table("services").upsert(rows[i:i+BATCH]).execute()
-        updated += len(rows[i:i+BATCH])
+    # Servis fiyat güncellemesini arka planda çalıştır (timeout olmadan)
+    import asyncio
+    async def _update_prices():
+        from app.services.pricing_service import calculate_hypeup_price
+        svcs = db.table("services").select("id, jap_dolar_price").eq("is_active", True).execute().data
+        rows = []
+        for svc in svcs:
+            if not svc.get("jap_dolar_price"):
+                continue
+            rows.append({"id": svc["id"], "hypeup_tl_price": calculate_hypeup_price(float(svc["jap_dolar_price"]), rate)})
+        BATCH = 200
+        for i in range(0, len(rows), BATCH):
+            db.table("services").upsert(rows[i:i+BATCH]).execute()
+        logger.info(f"[KurSet] {len(rows)} servis fiyatı güncellendi @ ₺{rate}")
 
-    return {"rate": rate, "updated_services": updated}
+    asyncio.create_task(_update_prices())
+
+    # Hemen döndür — arka planda devam eder
+    return {"rate": rate, "updated_services": "güncelleniyor (arka plan)"}
 
 
 @router.get("/prm4u/services")
