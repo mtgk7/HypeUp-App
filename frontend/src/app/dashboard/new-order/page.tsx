@@ -19,16 +19,18 @@ const LINK_PLACEHOLDER: Record<string, string> = {
   Pinterest:  "https://pinterest.com/kullanici",
 };
 
-// Hızlı sipariş şablonları: platform + servis adında geçmesi gereken anahtar kelimeler + varsayılan adet
+// Hızlı sipariş şablonları
+// keywords: servis adında olması gereken kelimeler (AND = hepsi olmak zorunda değil, OR)
+// exclude: bu kelimeler varsa atla
 const QUICK_PICKS = [
-  { label: "Instagram Takipçi",  platform: "Instagram", keywords: ["follow","takip"],   qty: 1000, emoji: "📸" },
-  { label: "Instagram Beğeni",   platform: "Instagram", keywords: ["like","beğen"],     qty: 1000, emoji: "❤️" },
-  { label: "TikTok Takipçi",     platform: "TikTok",    keywords: ["follow","takip","organik"], qty: 1000, emoji: "🎵" },
-  { label: "TikTok İzlenme",     platform: "TikTok",    keywords: ["view","izlen","görüntü"],   qty: 5000, emoji: "👁️" },
-  { label: "YouTube Abone",      platform: "YouTube",   keywords: ["subscri","abone"],  qty: 500,  emoji: "▶️" },
-  { label: "YouTube İzlenme",    platform: "YouTube",   keywords: ["view","izlen"],     qty: 5000, emoji: "🎬" },
-  { label: "Telegram Üye",       platform: "Telegram",  keywords: ["member","üye"],     qty: 1000, emoji: "✈️" },
-  { label: "X Takipçi",          platform: "X",         keywords: ["follow","takip"],   qty: 1000, emoji: "🐦" },
+  { label: "Instagram Takipçi",  platform: "Instagram", keywords: ["followers","takip"], exclude: ["traffic","comment","like","view","story","reel"], qty: 1000, emoji: "📸" },
+  { label: "Instagram Beğeni",   platform: "Instagram", keywords: ["likes","post like"],  exclude: ["traffic","comment","follow","view","story"],     qty: 1000, emoji: "❤️" },
+  { label: "TikTok Takipçi",     platform: "TikTok",    keywords: ["followers","takip"],  exclude: ["traffic","view","like","comment"],                qty: 1000, emoji: "🎵" },
+  { label: "TikTok İzlenme",     platform: "TikTok",    keywords: ["views","video view"], exclude: ["traffic","follower","like","comment"],             qty: 5000, emoji: "👁️" },
+  { label: "YouTube Abone",      platform: "YouTube",   keywords: ["subscribers"],        exclude: ["traffic","view","like","comment","watch"],         qty: 500,  emoji: "▶️" },
+  { label: "YouTube İzlenme",    platform: "YouTube",   keywords: ["views","video views"],exclude: ["traffic","subscriber","live","watch hour"],         qty: 5000, emoji: "🎬" },
+  { label: "Telegram Üye",       platform: "Telegram",  keywords: ["members"],            exclude: ["traffic","view","post"],                           qty: 1000, emoji: "✈️" },
+  { label: "X Takipçi",          platform: "X",         keywords: ["followers"],          exclude: ["traffic","like","retweet","view","comment"],        qty: 1000, emoji: "🐦" },
 ];
 
 export default function NewOrderPage() {
@@ -83,22 +85,28 @@ export default function NewOrderPage() {
     finally { setLoadingPrice(false); }
   }
 
+  function findBestService(pick: typeof QUICK_PICKS[0], services: Service[]): Service | null {
+    const plat = services.filter(s => s.platform_name === pick.platform);
+    const filtered = plat.filter(s => {
+      const n = s.service_name.toLowerCase();
+      const hasKeyword = pick.keywords.some(kw => n.includes(kw));
+      const hasExclude = (pick.exclude ?? []).some(ex => n.includes(ex));
+      return hasKeyword && !hasExclude;
+    });
+    // Ucuzdan pahalıya sırala, en ucuzu seç
+    const sorted = filtered.sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price);
+    return sorted[0] ?? plat[0] ?? null;
+  }
+
   // Hızlı sipariş: platforma git, servisi seç, adeti ayarla
   function applyQuickPick(pick: typeof QUICK_PICKS[0]) {
     setPlatform(pick.platform);
     setSuccess(""); setError("");
-
-    const platformServices = allServices.filter(s => s.platform_name === pick.platform);
-    const match = platformServices.find(s =>
-      pick.keywords.some(kw => s.service_name.toLowerCase().includes(kw))
-    ) ?? platformServices[0] ?? null;
-
+    const match = findBestService(pick, allServices);
     if (match) {
       setSelectedService(match);
-      const q = Math.max(pick.qty, match.min_order);
-      setQuantity(q);
+      setQuantity(Math.max(pick.qty, match.min_order));
     }
-
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   }
 
@@ -115,14 +123,11 @@ export default function NewOrderPage() {
     } finally { setSubmitting(false); }
   }
 
-  // Hızlı seçim için fiyat hesapla (önizleme)
+  // Hızlı seçim için fiyat önizleme
   function getQuickPrice(pick: typeof QUICK_PICKS[0]): string {
-    const platformServices = allServices.filter(s => s.platform_name === pick.platform);
-    const match = platformServices.find(s =>
-      pick.keywords.some(kw => s.service_name.toLowerCase().includes(kw))
-    ) ?? platformServices[0];
+    const match = findBestService(pick, allServices);
     if (!match) return "—";
-    const total = (match.hypeup_tl_price / 1000) * pick.qty;
+    const total = (match.hypeup_tl_price / 1000) * Math.max(pick.qty, match.min_order);
     return `₺${total.toFixed(2)}`;
   }
 
