@@ -23,14 +23,14 @@ const LINK_PLACEHOLDER: Record<string, string> = {
 // nameContains: servis adında geçmesi gereken kesin metin (küçük harf)
 // maxPrice: bu fiyatın üzerindeki servisleri atla (₺/1000)
 const QUICK_PICKS = [
-  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",   maxPrice: 50,   qty: 1000,  emoji: "📸" },
-  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill", maxPrice: 20,   qty: 1000,  emoji: "❤️" },
-  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 20,   qty: 10000, emoji: "👁️" },
+  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",   maxPrice: 600,  qty: 1000,  emoji: "📸" },
+  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill", maxPrice: 200,  qty: 1000,  emoji: "❤️" },
+  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 50,   qty: 10000, emoji: "👁️" },
   { label: "TikTok Hikaye",     platform: "TikTok",    nameContains: "story views",            maxPrice: 100,  qty: 1000,  emoji: "🎵" },
-  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 50,   qty: 10000, emoji: "🎬" },
+  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 200,  qty: 10000, emoji: "🎬" },
   { label: "YouTube Abone",     platform: "YouTube",   nameContains: "aboneleri",              maxPrice: 5000, qty: 100,  emoji: "▶️" },
-  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 50,   qty: 1000,  emoji: "✈️" },
-  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 20,   qty: 5000,  emoji: "🎵" },
+  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 400,  qty: 1000,  emoji: "✈️" },
+  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 100,  qty: 5000,  emoji: "🎵" },
 ];
 
 export default function NewOrderPage() {
