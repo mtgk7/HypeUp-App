@@ -280,7 +280,7 @@ async def list_all_services(_admin: dict = Depends(require_admin)):
     result = (
         db.table("services")
         .select("*, categories(platform_name, category_name)")
-        .order("platform_name")
+        .order("service_name")
         .execute()
     )
     services = []
