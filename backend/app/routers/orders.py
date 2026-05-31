@@ -5,7 +5,7 @@ from app.utils.auth import get_current_user
 from app.services.jap_service import get_jap_client
 from app.services.pricing_service import calculate_order_cost, get_tier_price, calculate_hypeup_price
 from app.services.currency_service import get_current_rate
-from app.services.telegram_service import send_telegram
+from app.services.telegram_service import send_telegram, send_telegram_with_buttons
 from app.routers.notifications import create_notification
 from datetime import datetime, timezone
 import logging
@@ -103,6 +103,13 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
             f"{svc.get('service_name', 'Siparişin')} sağlayıcıya iletilemedi, ₺{charge_tl:.2f} bakiyene iade edildi.",
             "error",
         )
+        await send_telegram(
+            f"🔴 <b>Sipariş İletilemedi</b>\n"
+            f"👤 {user['email']}\n"
+            f"📦 {svc.get('service_name', '?')}\n"
+            f"🔢 {body.quantity:,} adet — ₺{charge_tl:.2f} iade edildi\n"
+            f"❗ {str(e)[:200]}"
+        )
         raise HTTPException(
             status_code=502,
             detail="Sipariş sağlayıcıya iletilemedi, bakiyeniz iade edildi. Lütfen tekrar deneyin."
@@ -110,13 +117,16 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
 
     cat = svc.get("categories") or {}
 
-    # Telegram bildirimi
-    await send_telegram(
+    # Telegram bildirimi (yüksek tutarda uyarı başlığı + hızlı iade butonu)
+    big = "⚠️ <b>BÜYÜK SİPARİŞ</b>\n" if charge_tl >= 500 else ""
+    await send_telegram_with_buttons(
+        big +
         f"🛒 <b>Yeni Sipariş</b>\n"
         f"👤 {user['email']}\n"
         f"📦 {svc.get('service_name', '?')} ({cat.get('platform_name', '?')})\n"
         f"🔢 {body.quantity:,} adet\n"
-        f"💰 ₺{charge_tl:.2f}"
+        f"💰 ₺{charge_tl:.2f}",
+        buttons=[[{"text": "💸 İade Et", "callback_data": f"refund_order_{order['id']}"}]],
     )
 
     return OrderOut(

@@ -64,6 +64,13 @@ async def update_balance(body: UserBalanceUpdate, _admin: dict = Depends(require
         raise HTTPException(status_code=400, detail="Bakiye 0'ın altına düşemez")
 
     updated = db.table("users").update({"balance": new_balance}).eq("id", body.user_id).execute()
+    from app.services.telegram_service import send_telegram
+    await send_telegram(
+        f"✏️ <b>Manuel Bakiye Düzenleme</b>\n"
+        f"👤 {user.get('email', '?')}\n"
+        f"{'➕' if body.amount >= 0 else '➖'} ₺{abs(body.amount):.2f}\n"
+        f"💼 Yeni bakiye: ₺{new_balance:.2f}"
+    )
     return UserOut(**updated.data[0])
 
 
@@ -410,9 +417,17 @@ async def reject_payment(payment_id: str, _admin: dict = Depends(require_admin))
     result = db.table("payment_transactions").select("*").eq("id", payment_id).limit(1).execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Ödeme bulunamadı")
-    if result.data[0]["status"] != "pending":
+    tx = result.data[0]
+    if tx["status"] != "pending":
         raise HTTPException(status_code=400, detail="Bu ödeme zaten işlenmiş")
     db.table("payment_transactions").update({"status": "failed"}).eq("id", payment_id).execute()
+    from app.services.telegram_service import send_telegram
+    create_notification(
+        tx["user_id"], "Ödeme Reddedildi",
+        f"₺{float(tx['amount_tl']):.2f} tutarlı ödemen reddedildi. Yardım için bizimle iletişime geç.",
+        "error",
+    )
+    await send_telegram(f"❌ Ödeme reddedildi: ₺{float(tx['amount_tl']):.2f} — Ref: {tx.get('reference_code', '')}")
     return {"status": "failed"}
 
 

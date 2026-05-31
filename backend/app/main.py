@@ -148,8 +148,87 @@ async def full_sync():
             f"✅ {synced} servis güncellendi\n"
             f"💱 Kur: ₺{dolar_kuru:.2f}"
         )
+        # Sağlayıcı bakiyesini de kontrol et (düşükse uyar)
+        await check_provider_balance()
     except Exception as e:
         logger.error(f"[FullSync] Hata: {e}")
+        await send_telegram(f"🛑 <b>Otomatik Senkronizasyon Hatası</b>\n{str(e)[:300]}")
+
+
+# ──────────────────────────────────────────────
+# Sağlayıcı bakiye kontrolü + günlük özet
+# ──────────────────────────────────────────────
+PROVIDER_BALANCE_THRESHOLD = 10.0  # USD — altına inince uyar
+
+
+async def check_provider_balance():
+    """PRM4U bakiyesi eşik altına inince Telegram'dan uyar."""
+    from app.services.telegram_service import send_telegram
+    try:
+        bal = await get_jap_client().get_balance()
+        raw = bal.get("balance", bal) if isinstance(bal, dict) else bal
+        amount = float(str(raw).replace(",", "."))
+        if amount < PROVIDER_BALANCE_THRESHOLD:
+            await send_telegram(
+                f"🔴 <b>Sağlayıcı Bakiyesi Düşük</b>\n"
+                f"💵 PRM4U: ${amount:.2f}\n"
+                f"⚠️ Eşik ${PROVIDER_BALANCE_THRESHOLD:.0f} altında — bakiye yükle, "
+                f"yoksa siparişler iletilemez."
+            )
+    except Exception as e:
+        logger.warning(f"[ProviderBalance] Kontrol hatası: {e}")
+
+
+async def send_daily_summary():
+    """Son 24 saatin ciro/kâr/üye özeti + takılan sipariş uyarısı."""
+    from app.services.telegram_service import send_telegram
+    from datetime import datetime, timezone, timedelta
+    db = get_supabase()
+    rate = get_current_rate()
+    since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    orders = db.table("orders").select("charge_tl, cost_dolar").gte("created_at", since).execute().data or []
+    pays = db.table("payment_transactions").select("amount_tl").eq("status", "completed").gte("created_at", since).execute().data or []
+    users = db.table("users").select("id").gte("created_at", since).execute().data or []
+    revenue = sum(float(o["charge_tl"]) for o in orders)
+    cost_tl = sum(float(o["cost_dolar"]) for o in orders) * rate
+    deposits = sum(float(p["amount_tl"]) for p in pays)
+    stuck = db.table("orders").select("id", count="exact").eq("status", "processing").lt(
+        "created_at", (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+    ).execute()
+    stuck_n = stuck.count or 0
+    msg = (
+        f"📊 <b>Günlük Özet</b> (son 24 saat)\n"
+        f"🛒 Sipariş: {len(orders)}\n"
+        f"💰 Ciro: ₺{revenue:.2f}\n"
+        f"💵 Maliyet: ₺{cost_tl:.2f}\n"
+        f"📈 Net kâr: ₺{revenue - cost_tl:.2f}\n"
+        f"🏦 Yüklenen bakiye: ₺{deposits:.2f}\n"
+        f"👥 Yeni üye: {len(users)}\n"
+        f"💱 Kur: ₺{rate:.2f}"
+    )
+    if stuck_n:
+        msg += f"\n\n⏳ <b>{stuck_n} sipariş 24 saattir 'processing'</b> — kontrol et."
+    await send_telegram(msg)
+
+
+async def daily_summary_loop():
+    """Her gün TR saatiyle 21:00'de günlük özet gönder."""
+    from datetime import datetime, timedelta
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo("Europe/Istanbul")
+    except Exception:
+        tz = None
+    while True:
+        now = datetime.now(tz) if tz else datetime.now()
+        target = now.replace(hour=21, minute=0, second=0, microsecond=0)
+        if target <= now:
+            target += timedelta(days=1)
+        await asyncio.sleep((target - now).total_seconds())
+        try:
+            await send_daily_summary()
+        except Exception as e:
+            logger.error(f"[DailySummary] Hata: {e}")
 
 
 # ──────────────────────────────────────────────
@@ -163,6 +242,8 @@ async def order_sync_loop():
             await sync_order_statuses()
         except Exception as e:
             logger.error(f"[Scheduler] Sipariş sync hatası: {e}")
+            from app.services.telegram_service import send_telegram
+            await send_telegram(f"🛑 <b>Sipariş Senkronizasyon Hatası</b>\n{str(e)[:300]}")
 
 
 async def twice_daily_sync_loop():
@@ -179,18 +260,23 @@ async def twice_daily_sync_loop():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: arka planda full sync (kur kontrolü dahil)
+    from app.services.telegram_service import send_telegram
+    # Startup bildirimi (deploy/restart doğrulaması)
+    asyncio.create_task(send_telegram("✅ <b>Backend canlı</b>\nHypeUp API başlatıldı (deploy/restart)."))
+    # Startup: arka planda full sync (kur kontrolü + sağlayıcı bakiye dahil)
     # NOT: currency_refresh_loop kaldırıldı — smart_rate_check yönetiyor
     asyncio.create_task(full_sync())
 
     # Arka plan döngüler
     task1 = asyncio.create_task(order_sync_loop())
     task2 = asyncio.create_task(twice_daily_sync_loop())
+    task3 = asyncio.create_task(daily_summary_loop())
 
     yield
 
     task1.cancel()
     task2.cancel()
+    task3.cancel()
 
 
 # ──────────────────────────────────────────────

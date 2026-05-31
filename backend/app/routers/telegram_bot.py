@@ -83,6 +83,8 @@ async def telegram_webhook(request: Request):
             "/orders — Bekleyen siparişler\n"
             "/balance email miktar — Bakiye ekle\n"
             "/broadcast mesaj — Tüm kullanıcılara bildirim\n"
+            "/provider — Sağlayıcı (PRM4U) bakiyesi\n"
+            "\nKısayol: \"bugün\" / \"özet\" → istatistik, \"bekleyen\" → siparişler\n"
         ))
 
     # ── /stats ─────────────────────────────────
@@ -112,6 +114,16 @@ async def telegram_webhook(request: Request):
             await reply(chat_id, "❌ Kullanım: /broadcast Mesajınız burada")
         else:
             await cmd_broadcast(chat_id, msg)
+
+    # ── /provider — sağlayıcı bakiyesi ─────────
+    elif text == "/provider":
+        await cmd_provider(chat_id)
+
+    # ── Doğal dil kısayolları ──────────────────
+    elif text.lower() in ("bugün", "bugun", "özet", "ozet", "stats"):
+        await cmd_stats(chat_id)
+    elif text.lower() in ("bekleyen", "siparişler", "siparisler"):
+        await cmd_orders(chat_id)
 
     else:
         await reply(chat_id, "❓ Bilinmeyen komut. /help ile komutları gör.")
@@ -196,6 +208,34 @@ async def handle_callback(cbq: dict):
                 f"💰 ₺{float(tx['amount_tl']):.2f}\n"
                 f"🔑 Ref: {tx.get('reference_code', '')}"
             )
+        # ── Sipariş iade ───────────────────────────
+        elif data_str.startswith("refund_order_"):
+            order_id = data_str.replace("refund_order_", "")
+            o = db.table("orders").select("*, services(service_name)").eq("id", order_id).limit(1).execute()
+            if not o.data:
+                await answer_callback(cbq_id, "❌ Sipariş bulunamadı"); return
+            order = o.data[0]
+            if order["status"] == "refunded":
+                await answer_callback(cbq_id, "⚠️ Zaten iade edildi"); return
+            u = db.table("users").select("balance, email").eq("id", order["user_id"]).limit(1).execute()
+            if not u.data:
+                await answer_callback(cbq_id, "❌ Kullanıcı bulunamadı"); return
+            new_bal = round(float(u.data[0]["balance"]) + float(order["charge_tl"]), 2)
+            db.table("users").update({"balance": new_bal}).eq("id", order["user_id"]).execute()
+            db.table("orders").update({"status": "refunded"}).eq("id", order_id).execute()
+            svc_name = (order.get("services") or {}).get("service_name", "Sipariş")
+            create_notification(order["user_id"], "İade Yapıldı",
+                f"{svc_name} için ₺{float(order['charge_tl']):.2f} bakiyene iade edildi.", "info")
+            await answer_callback(cbq_id, "💸 İade edildi")
+            await edit_telegram_message(
+                msg_chat or str(s.TELEGRAM_CHAT_ID), msg_id,
+                f"💸 <b>Sipariş İade Edildi</b>\n"
+                f"👤 {u.data[0]['email']}\n"
+                f"📦 {svc_name}\n"
+                f"💰 ₺{float(order['charge_tl']):.2f} iade — yeni bakiye ₺{new_bal:.2f}\n"
+                f"⚠️ Sağlayıcıda manuel iptal gerekebilir."
+            )
+
         else:
             await answer_callback(cbq_id)
 
@@ -324,3 +364,18 @@ async def cmd_broadcast(chat_id: str, msg: str):
         f"📨 {len(users)} kullanıcıya bildirim iletildi.\n"
         f"💬 Mesaj: {msg[:100]}"
     )
+
+
+async def cmd_provider(chat_id: str):
+    """Sağlayıcı (PRM4U) bakiyesini göster."""
+    from app.services.jap_service import get_jap_client
+    try:
+        bal = await get_jap_client().get_balance()
+        if isinstance(bal, dict):
+            raw = bal.get("balance", bal)
+            cur = bal.get("currency", "USD")
+        else:
+            raw, cur = bal, "USD"
+        await reply(chat_id, f"💵 <b>Sağlayıcı Bakiyesi (PRM4U)</b>\n{raw} {cur}")
+    except Exception as e:
+        await reply(chat_id, f"❌ Bakiye alınamadı: {e}")

@@ -170,7 +170,9 @@ async def create_manual_payment(body: ManualPaymentRequest, user: dict = Depends
     tx_id = db.table("payment_transactions").select("id").eq("platform_order_id", ref).limit(1).execute()
     tx_db_id = tx_id.data[0]["id"] if tx_id.data else ref
 
+    big = "⚠️ <b>BÜYÜK ÖDEME</b>\n" if body.amount >= 500 else ""
     await send_telegram_with_buttons(
+        big +
         f"💳 <b>Yeni Ödeme Bildirimi</b>\n"
         f"👤 {user['email']}\n"
         f"💰 ₺{body.amount:.2f}\n"
