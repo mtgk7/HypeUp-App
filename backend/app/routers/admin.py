@@ -332,6 +332,7 @@ async def update_order_status(order_id: str, body: OrderStatusUpdate, _admin: di
 @router.get("/services")
 async def list_all_services(_admin: dict = Depends(require_admin)):
     db = get_supabase()
+    rate = get_current_rate()
     result = (
         db.table("services")
         .select("*, categories(platform_name, category_name)")
@@ -341,6 +342,10 @@ async def list_all_services(_admin: dict = Depends(require_admin)):
     services = []
     for row in result.data:
         cat = row.pop("categories", {}) or {}
+        # Fiyatı güncel kurdan CANLI hesapla — admin paneli de hiç eski kalmasın
+        jd = row.get("jap_dolar_price")
+        if jd:
+            row["hypeup_tl_price"] = calculate_hypeup_price(float(jd), rate)
         services.append({**row, "platform_name": cat.get("platform_name"), "category_name": cat.get("category_name")})
     return services
 

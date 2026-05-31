@@ -12,6 +12,17 @@ from app.services.currency_service import get_current_rate
 from typing import Optional, List
 
 # ──────────────────────────────────────────────────────────────
+# Kur baz alma noktası (RATE_BASELINE)
+# Tüm retail (tier) ve formül fiyatları bu kurda tanımlandı. Güncel kur
+# değiştikçe TÜM fiyatlar bu orana göre ölçeklenir:
+#     fiyat = baz_fiyat × (guncel_kur / RATE_BASELINE)
+# Böylece sağlayıcı maliyetine olan KAT (marj) sabit kalır; kuru %5 artırınca
+# tüm fiyatlar %5 artar. ⚠️ Bu değer, fiyatların tanımlandığı andaki sistem
+# kuruna eşit olmalı (şu an ₺47.50). Değiştirmek tüm fiyatları topluca kaydırır.
+# ──────────────────────────────────────────────────────────────
+RATE_BASELINE = 47.5
+
+# ──────────────────────────────────────────────────────────────
 # Miktara göre kademeli fiyatlandırma (TakipciBudur x0.90)
 # key: jap_service_id  value: [{min, max, price_per_1000}]
 # ──────────────────────────────────────────────────────────────
@@ -189,8 +200,8 @@ SERVICE_TIERS: dict[int, List[dict]] = {
 }
 
 
-def get_tier_price(jap_service_id: int, quantity: int) -> Optional[float]:
-    """Miktar-bazlı fiyatlandırma: uygun tier'ı bulur, yoksa None döner."""
+def _tier_base_price(jap_service_id: int, quantity: int) -> Optional[float]:
+    """Baseline kurdaki ham tier fiyatı (kur ölçeklemesi YOK)."""
     tiers = SERVICE_TIERS.get(jap_service_id)
     if not tiers:
         return None
@@ -201,6 +212,28 @@ def get_tier_price(jap_service_id: int, quantity: int) -> Optional[float]:
     if quantity < tiers[0]["min"]:
         return tiers[0]["price_per_1000"]
     return tiers[-1]["price_per_1000"]
+
+
+def get_tier_price(
+    jap_service_id: int, quantity: int, dolar_kuru: float | None = None
+) -> Optional[float]:
+    """
+    Miktar-bazlı retail fiyat (1000 adet TL) — kura ORANTILI ölçeklenir.
+
+    Tier fiyatları RATE_BASELINE (₺47.50) kurunda tanımlandı. Güncel kur değiştikçe:
+        fiyat = tier_fiyatı × (guncel_kur / RATE_BASELINE)
+    Böylece sağlayıcı maliyetine olan kat (marj) sabit kalır — kuru %5 artırınca
+    bu servisin fiyatı da %5 artar. Tier yoksa None döner.
+
+    Performans: çok sayıda servis için döngüde çağrılırken `dolar_kuru` bir kez
+    çekilip parametre olarak geçilmeli (yoksa her çağrıda DB'den okunur).
+    """
+    base = _tier_base_price(jap_service_id, quantity)
+    if base is None:
+        return None
+    if dolar_kuru is None:
+        dolar_kuru = get_current_rate()
+    return round(base * (dolar_kuru / RATE_BASELINE), 4)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -237,20 +270,24 @@ def calculate_hypeup_price(jap_dolar_per_1000: float, dolar_kuru: float | None =
     if dolar_kuru is None:
         dolar_kuru = get_current_rate()
 
-    cost = jap_dolar_per_1000 * dolar_kuru
+    # Marj/bant seçimi RATE_BASELINE kurunda yapılır, sonuç güncel kura orantılanır.
+    # Böylece kur değişince fiyat tam orantılı değişir (bant sınırında zıplama olmaz)
+    # ve sağlayıcı maliyetine olan kat sabit kalır. dolar_kuru == RATE_BASELINE iken
+    # sonuç eski formülle birebir aynıdır.
+    base_cost = jap_dolar_per_1000 * RATE_BASELINE
 
-    if cost < 3.0:
-        price = max(cost * 5.0, MIN_PRICE_TL)
-    elif cost < 15.0:
-        price = cost * 3.2
-    elif cost < 30.0:
-        price = cost * 1.75
-    elif cost < 80.0:
-        price = cost * 3.90
+    if base_cost < 3.0:
+        base_price = max(base_cost * 5.0, MIN_PRICE_TL)
+    elif base_cost < 15.0:
+        base_price = base_cost * 3.2
+    elif base_cost < 30.0:
+        base_price = base_cost * 1.75
+    elif base_cost < 80.0:
+        base_price = base_cost * 3.90
     else:
-        price = cost * 5.0
+        base_price = base_cost * 5.0
 
-    return round(price, 4)
+    return round(base_price * (dolar_kuru / RATE_BASELINE), 4)
 
 
 # Türkçe alias — services.py router'ında kullanılır

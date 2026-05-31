@@ -1,6 +1,6 @@
 # backend/app/routers/services.py
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from app.database import get_supabase_client
 from app.services.pricing_service import hesapla_hypeup_satis_fiyati, get_tier_price, FEATURED_PACKAGES
 from app.services.jap_service import JustAnotherPanelClient
@@ -21,16 +21,18 @@ PRM4U_KEY = os.getenv("PRM4U_API_KEY", "")
 
 # --- 0. PUBLIC — Auth gerektirmez, landing page için ---
 @router.get("/public")
-async def list_public_services():
+async def list_public_services(response: Response):
     """Giriş gerektirmez. Landing page servis + fiyat listesi için. Tüm aktif servisleri sayfalayarak döner."""
     supabase = get_supabase_client()
+    rate = get_current_rate()
+    response.headers["Cache-Control"] = "no-store"  # fiyat asla önbellekten gelmesin
     services = []
     page_size = 1000
     offset = 0
     while True:
         result = (
             supabase.table("services")
-            .select("id, service_name, jap_service_id, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
+            .select("id, service_name, jap_service_id, jap_dolar_price, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
             .eq("is_active", True)
             .range(offset, offset + page_size - 1)
             .execute()
@@ -39,9 +41,13 @@ async def list_public_services():
         for svc in batch:
             cat = svc.pop("categories", {}) or {}
             # Tier'lı servislerde gösterilen fiyat = retail tier fiyatı (checkout ile aynı),
-            # diğerlerinde saklanan formül fiyatı.
-            tier = get_tier_price(int(svc["jap_service_id"]), 1000)
-            display_price = tier if tier is not None else float(svc["hypeup_tl_price"])
+            # diğerlerinde formül fiyatı — ikisi de güncel kurdan CANLI hesaplanır (DB'ye bağlı değil).
+            tier = get_tier_price(int(svc["jap_service_id"]), 1000, rate)
+            if tier is not None:
+                display_price = tier
+            else:
+                jd = svc.get("jap_dolar_price")
+                display_price = hesapla_hypeup_satis_fiyati(float(jd), rate) if jd else float(svc["hypeup_tl_price"])
             services.append({
                 "id":              svc["id"],
                 "service_name":    svc["service_name"],
@@ -59,13 +65,15 @@ async def list_public_services():
 
 # --- 0b. PUBLIC — Öne çıkan hazır paketler (landing page) ---
 @router.get("/featured")
-async def list_featured_packages():
+async def list_featured_packages(response: Response):
     """Giriş gerektirmez. Landing page'deki popüler paketler — kesin (tier) retail fiyatlarıyla."""
     supabase = get_supabase_client()
+    rate = get_current_rate()
+    response.headers["Cache-Control"] = "no-store"  # fiyat asla önbellekten gelmesin
     jap_ids = [p["jap_service_id"] for p in FEATURED_PACKAGES]
     rows = (
         supabase.table("services")
-        .select("id, service_name, jap_service_id, min_order, max_order, hypeup_tl_price, is_active, categories(platform_name)")
+        .select("id, service_name, jap_service_id, jap_dolar_price, min_order, max_order, hypeup_tl_price, is_active, categories(platform_name)")
         .in_("jap_service_id", jap_ids)
         .eq("is_active", True)
         .execute()
@@ -86,9 +94,10 @@ async def list_featured_packages():
         for q in pkg["options"]:
             if q < min_order or (max_order and q > max_order):
                 continue
-            unit = get_tier_price(pkg["jap_service_id"], q)
+            unit = get_tier_price(pkg["jap_service_id"], q, rate)
             if unit is None:
-                unit = float(svc["hypeup_tl_price"])
+                jd = svc.get("jap_dolar_price")
+                unit = hesapla_hypeup_satis_fiyati(float(jd), rate) if jd else float(svc["hypeup_tl_price"])
             options.append({
                 "qty":           q,
                 "unit_per_1000": round(unit, 2),
@@ -96,7 +105,9 @@ async def list_featured_packages():
             })
         if not options:
             # Tüm seçenekler aralık dışıysa min_order'ı tek seçenek yap
-            unit = get_tier_price(pkg["jap_service_id"], min_order) or float(svc["hypeup_tl_price"])
+            jd = svc.get("jap_dolar_price")
+            unit = get_tier_price(pkg["jap_service_id"], min_order, rate) or (
+                hesapla_hypeup_satis_fiyati(float(jd), rate) if jd else float(svc["hypeup_tl_price"]))
             options.append({"qty": min_order, "unit_per_1000": round(unit, 2),
                             "price_tl": round(unit / 1000 * min_order, 2)})
 
@@ -119,12 +130,14 @@ async def list_featured_packages():
 
 # --- 1. MÜŞTERİNİN GÖRECEĞİ AKTİF SERVİSLERİ LİSTELEME ---
 @router.get("/list")
-async def list_services(_user: dict = Depends(get_current_user)):
+async def list_services(response: Response, _user: dict = Depends(get_current_user)):
     """
     Kullanıcının sipariş formunda göreceği platform ve servis listesini döner.
-    Fiyatlar veritabanından kâr motorunun hesapladığı TL cinsinden gelir.
+    Fiyatlar güncel kurdan CANLI hesaplanır (tier veya formül) — DB'deki eski değere bağlı değil.
     """
     supabase = get_supabase_client()
+    rate = get_current_rate()
+    response.headers["Cache-Control"] = "no-store"  # fiyat asla önbellekten gelmesin
 
     # Veritabanındaki aktif kategorileri ve servisleri çek
     categories = (
@@ -162,11 +175,15 @@ async def list_services(_user: dict = Depends(get_current_user)):
         svc["category_name"] = cat.get("category_name", "")
         # Tier'lı servislerde gösterilen fiyat = retail tier fiyatı (sipariş ile aynı)
         try:
-            tier = get_tier_price(int(svc["jap_service_id"]), 1000)
+            tier = get_tier_price(int(svc["jap_service_id"]), 1000, rate)
         except (TypeError, ValueError):
             tier = None
         if tier is not None:
             svc["hypeup_tl_price"] = float(tier)
+        else:
+            jd = svc.get("jap_dolar_price")
+            if jd:
+                svc["hypeup_tl_price"] = hesapla_hypeup_satis_fiyati(float(jd), rate)
         services_flat.append(svc)
 
     return {
@@ -204,9 +221,13 @@ async def calculate_price(
 
     dolar_kuru = get_current_rate()
 
-    # Tier fiyatı varsa kullan, yoksa flat fiyata dön
-    tier_price = get_tier_price(int(svc["jap_service_id"]), body.quantity)
-    effective_tl_per_1000 = tier_price if tier_price is not None else float(svc["hypeup_tl_price"])
+    # Tier varsa tier, yoksa formül — ikisi de güncel kurdan CANLI hesaplanır
+    tier_price = get_tier_price(int(svc["jap_service_id"]), body.quantity, dolar_kuru)
+    if tier_price is not None:
+        effective_tl_per_1000 = tier_price
+    else:
+        jd = svc.get("jap_dolar_price")
+        effective_tl_per_1000 = hesapla_hypeup_satis_fiyati(float(jd), dolar_kuru) if jd else float(svc["hypeup_tl_price"])
 
     costs = calculate_order_cost(
         jap_dolar_per_1000=float(svc["jap_dolar_price"]),
