@@ -19,23 +19,67 @@ const LINK_PLACEHOLDER: Record<string, string> = {
   Pinterest:  "https://pinterest.com/kullanici",
 };
 
-// Hızlı sipariş şablonları
-// nameContains: servis adında geçmesi gereken kesin metin (küçük harf)
-// maxPrice: bu fiyatın üzerindeki servisleri atla (₺/1000)
-const QUICK_PICKS = [
-  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",   maxPrice: 600,  qty: 1000,  emoji: "📸" },
-  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill", maxPrice: 200,  qty: 1000,  emoji: "❤️" },
-  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 50,   qty: 10000, emoji: "👁️" },
-  { label: "TikTok Hikaye",     platform: "TikTok",    nameContains: "story views",            maxPrice: 100,  qty: 1000,  emoji: "🎵" },
-  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 200,  qty: 10000, emoji: "🎬" },
-  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "aboneleri",              maxPrice: 5000, qty: 100,  emoji: "▶️" },
-  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 400,  qty: 1000,  emoji: "✈️" },
-  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 100,  qty: 5000,  emoji: "🎵" },
-];
+// Popüler paketler — backend /featured endpoint'inden (kesin retail/tier fiyatları)
+interface FeaturedOption {
+  qty: number;
+  unit_per_1000: number;
+  price_tl: number;
+}
+interface FeaturedPackage {
+  label: string;
+  emoji: string;
+  platform: string;
+  service_id: string;
+  jap_service_id: number;
+  min_order: number;
+  default_qty: number;
+  options: FeaturedOption[];
+}
+
+function QuickPickCard({ pkg, onApply }: { pkg: FeaturedPackage; onApply: (pkg: FeaturedPackage, qty: number) => void }) {
+  const [qty, setQty] = useState<number>(pkg.default_qty);
+  const opt = pkg.options.find((o) => o.qty === qty) ?? pkg.options[0];
+  return (
+    <div className="group bg-[#151515] border border-white/8 hover:border-violet-500/40 rounded-2xl p-4 flex flex-col transition-all">
+      <div className="text-2xl mb-2">{pkg.emoji}</div>
+      <p className="text-sm font-semibold text-white/90 leading-tight mb-3">{pkg.label}</p>
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {pkg.options.map((o) => (
+          <button
+            key={o.qty}
+            type="button"
+            onClick={() => setQty(o.qty)}
+            className={`text-[11px] font-semibold px-2 py-1 rounded-md border transition ${
+              o.qty === opt.qty
+                ? "bg-violet-600 border-violet-500 text-white"
+                : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80 hover:border-white/25"
+            }`}
+          >
+            {o.qty.toLocaleString("tr-TR")}
+          </button>
+        ))}
+      </div>
+      <div className="mt-auto">
+        <p className="text-xl font-black text-violet-400">
+          ₺{opt.price_tl.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+        <p className="text-[11px] text-white/30 mb-3">{opt.qty.toLocaleString("tr-TR")} adet</p>
+        <button
+          type="button"
+          onClick={() => onApply(pkg, opt.qty)}
+          className="w-full flex items-center justify-center gap-1 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition"
+        >
+          Seç <ChevronRight className="w-3 h-3" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function NewOrderPage() {
   const [platform, setPlatform] = useState("Instagram");
   const [allServices, setAllServices] = useState<Service[]>([]);
+  const [featured, setFeatured] = useState<FeaturedPackage[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [link, setLink] = useState("");
@@ -53,19 +97,24 @@ export default function NewOrderPage() {
     (async () => {
       setLoadingServices(true);
       try {
-        const res = await servicesApi.public();
+        const [res, feat] = await Promise.all([
+          servicesApi.public(),
+          servicesApi.featured().catch(() => ({ data: [] })),
+        ]);
         const all: Service[] = Array.isArray(res.data) ? res.data : [];
         setAllServices(all);
         setServices(all.filter(s => s.platform_name === "Instagram"));
+        if (Array.isArray(feat.data)) setFeatured(feat.data);
       } catch { setAllServices([]); }
       finally { setLoadingServices(false); }
     })();
   }, []);
 
-  // Platform değişince filtrele
+  // Platform değişince filtrele (paket seçimiyle gelen, platforma uyan servisi koru)
   useEffect(() => {
-    setSelectedService(null); setPriceInfo(null);
     setServices(allServices.filter(s => s.platform_name === platform));
+    setSelectedService(prev => (prev && prev.platform_name === platform ? prev : null));
+    setPriceInfo(null);
   }, [platform, allServices]);
 
   // Fiyat hesapla
@@ -85,27 +134,14 @@ export default function NewOrderPage() {
     finally { setLoadingPrice(false); }
   }
 
-  function findBestService(pick: typeof QUICK_PICKS[0], services: Service[]): Service | null {
-    const plat = services.filter(s => s.platform_name === pick.platform);
-    // Kesin isim eşleştirmesi + max fiyat sınırı
-    const filtered = plat.filter(s => {
-      const n = s.service_name.toLowerCase();
-      const matchesName = n.includes(pick.nameContains.toLowerCase());
-      const underMax = s.hypeup_tl_price <= pick.maxPrice;
-      return matchesName && underMax;
-    });
-    const sorted = filtered.sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price);
-    return sorted[0] ?? null;
-  }
-
-  // Hızlı sipariş: platforma git, servisi seç, adeti ayarla
-  function applyQuickPick(pick: typeof QUICK_PICKS[0]) {
-    setPlatform(pick.platform);
+  // Hızlı sipariş: paketin servisini seç, adeti ayarla, forma kaydır
+  function applyQuickPick(pkg: FeaturedPackage, qty: number) {
     setSuccess(""); setError("");
-    const match = findBestService(pick, allServices);
+    const match = allServices.find(s => s.id === pkg.service_id);
     if (match) {
+      setPlatform(match.platform_name || pkg.platform);
       setSelectedService(match);
-      setQuantity(Math.max(pick.qty, match.min_order));
+      setQuantity(Math.max(qty, match.min_order));
     }
     setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }), 100);
   }
@@ -121,14 +157,6 @@ export default function NewOrderPage() {
     } catch (err: any) {
       setError(err.response?.data?.detail || "Sipariş verilemedi");
     } finally { setSubmitting(false); }
-  }
-
-  // Hızlı seçim için fiyat önizleme
-  function getQuickPrice(pick: typeof QUICK_PICKS[0]): string {
-    const match = findBestService(pick, allServices);
-    if (!match) return "—";
-    const total = (match.hypeup_tl_price / 1000) * Math.max(pick.qty, match.min_order);
-    return `₺${total.toFixed(2)}`;
   }
 
   return (
@@ -161,22 +189,8 @@ export default function NewOrderPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {QUICK_PICKS.map((pick) => (
-              <button
-                key={pick.label}
-                onClick={() => applyQuickPick(pick)}
-                className="group bg-[#151515] border border-white/8 hover:border-violet-500/50 hover:bg-violet-500/5 rounded-2xl p-4 text-left transition-all"
-              >
-                <div className="text-2xl mb-2">{pick.emoji}</div>
-                <p className="text-sm font-semibold text-white/90 group-hover:text-white leading-tight mb-2">{pick.label}</p>
-                <p className="text-base font-bold text-white">{pick.qty.toLocaleString()} <span className="text-xs font-normal text-white/40">adet</span></p>
-                <p className="text-xl font-black text-violet-400 mt-1">
-                  {getQuickPrice(pick)}
-                </p>
-                <div className="flex items-center justify-center gap-1 mt-3 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition">
-                  Seç <ChevronRight className="w-3 h-3" />
-                </div>
-              </button>
+            {featured.map((pkg) => (
+              <QuickPickCard key={pkg.jap_service_id} pkg={pkg} onApply={applyQuickPick} />
             ))}
           </div>
         )}

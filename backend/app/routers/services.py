@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.database import get_supabase_client
-from app.services.pricing_service import hesapla_hypeup_satis_fiyati, get_tier_price
+from app.services.pricing_service import hesapla_hypeup_satis_fiyati, get_tier_price, FEATURED_PACKAGES
 from app.services.jap_service import JustAnotherPanelClient
 from app.models.schemas import ServicePriceQuery, ServicePriceResponse
 from app.utils.auth import get_current_user
@@ -30,7 +30,7 @@ async def list_public_services():
     while True:
         result = (
             supabase.table("services")
-            .select("id, service_name, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
+            .select("id, service_name, jap_service_id, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
             .eq("is_active", True)
             .range(offset, offset + page_size - 1)
             .execute()
@@ -38,10 +38,14 @@ async def list_public_services():
         batch = result.data or []
         for svc in batch:
             cat = svc.pop("categories", {}) or {}
+            # Tier'lı servislerde gösterilen fiyat = retail tier fiyatı (checkout ile aynı),
+            # diğerlerinde saklanan formül fiyatı.
+            tier = get_tier_price(int(svc["jap_service_id"]), 1000)
+            display_price = tier if tier is not None else float(svc["hypeup_tl_price"])
             services.append({
                 "id":              svc["id"],
                 "service_name":    svc["service_name"],
-                "hypeup_tl_price": float(svc["hypeup_tl_price"]),
+                "hypeup_tl_price": float(display_price),
                 "min_order":       svc["min_order"],
                 "max_order":       svc["max_order"],
                 "platform_name":   cat.get("platform_name", ""),
@@ -51,6 +55,66 @@ async def list_public_services():
             break
         offset += page_size
     return services
+
+
+# --- 0b. PUBLIC — Öne çıkan hazır paketler (landing page) ---
+@router.get("/featured")
+async def list_featured_packages():
+    """Giriş gerektirmez. Landing page'deki popüler paketler — kesin (tier) retail fiyatlarıyla."""
+    supabase = get_supabase_client()
+    jap_ids = [p["jap_service_id"] for p in FEATURED_PACKAGES]
+    rows = (
+        supabase.table("services")
+        .select("id, service_name, jap_service_id, min_order, max_order, hypeup_tl_price, is_active, categories(platform_name)")
+        .in_("jap_service_id", jap_ids)
+        .eq("is_active", True)
+        .execute()
+    ).data or []
+    by_jap = {int(r["jap_service_id"]): r for r in rows}
+
+    out = []
+    for pkg in FEATURED_PACKAGES:
+        svc = by_jap.get(pkg["jap_service_id"])
+        if not svc:
+            continue
+        cat = svc.get("categories") or {}
+        min_order = svc["min_order"] or 1
+        max_order = svc["max_order"] or 0
+
+        # Servis min/max sınırına uyan miktar seçenekleri + her biri için tier fiyatı
+        options = []
+        for q in pkg["options"]:
+            if q < min_order or (max_order and q > max_order):
+                continue
+            unit = get_tier_price(pkg["jap_service_id"], q)
+            if unit is None:
+                unit = float(svc["hypeup_tl_price"])
+            options.append({
+                "qty":           q,
+                "unit_per_1000": round(unit, 2),
+                "price_tl":      round(unit / 1000 * q, 2),
+            })
+        if not options:
+            # Tüm seçenekler aralık dışıysa min_order'ı tek seçenek yap
+            unit = get_tier_price(pkg["jap_service_id"], min_order) or float(svc["hypeup_tl_price"])
+            options.append({"qty": min_order, "unit_per_1000": round(unit, 2),
+                            "price_tl": round(unit / 1000 * min_order, 2)})
+
+        default_qty = pkg["default_qty"]
+        if not any(o["qty"] == default_qty for o in options):
+            default_qty = options[0]["qty"]
+
+        out.append({
+            "label":          pkg["label"],
+            "emoji":          pkg["emoji"],
+            "platform":       cat.get("platform_name", pkg["platform"]),
+            "service_id":     svc["id"],
+            "jap_service_id": pkg["jap_service_id"],
+            "min_order":      min_order,
+            "default_qty":    default_qty,
+            "options":        options,
+        })
+    return out
 
 
 # --- 1. MÜŞTERİNİN GÖRECEĞİ AKTİF SERVİSLERİ LİSTELEME ---

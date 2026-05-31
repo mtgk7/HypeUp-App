@@ -197,7 +197,29 @@ def get_tier_price(jap_service_id: int, quantity: int) -> Optional[float]:
     for tier in tiers:
         if tier["min"] <= quantity <= tier["max"]:
             return tier["price_per_1000"]
-    return None
+    # Miktar tier aralığının dışındaysa en yakın uca tutun (ör. min'in altı → ilk tier)
+    if quantity < tiers[0]["min"]:
+        return tiers[0]["price_per_1000"]
+    return tiers[-1]["price_per_1000"]
+
+
+# ──────────────────────────────────────────────────────────────
+# Landing / öne çıkan hazır paketler — HEPSİ SERVICE_TIERS'te (retail fiyatlı)
+# jap_service_id → DB'deki gerçek servisle eşleşir, fiyat tier'dan gelir
+# ──────────────────────────────────────────────────────────────
+_QTY_STD = [100, 250, 500, 750, 1000]          # takipçi / beğeni / abone
+_QTY_VIEW = [1000, 5000, 10000, 25000, 50000]  # izlenme
+
+FEATURED_PACKAGES: List[dict] = [
+    {"jap_service_id": 47,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",  "emoji": "📸", "platform": "Instagram"},
+    {"jap_service_id": 8216,  "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",         "emoji": "❤️", "platform": "Instagram"},
+    {"jap_service_id": 10055, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",           "emoji": "🎵", "platform": "TikTok"},
+    {"jap_service_id": 10019, "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",           "emoji": "👁️", "platform": "TikTok"},
+    {"jap_service_id": 3519,  "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",            "emoji": "▶️", "platform": "YouTube"},
+    {"jap_service_id": 7533,  "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",          "emoji": "🎬", "platform": "YouTube"},
+    {"jap_service_id": 8695,  "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                "emoji": "✖️", "platform": "X"},
+    {"jap_service_id": 10216, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
+]
 
 MIN_PRICE_TL = 5.0  # 1000 adet için minimum satış fiyatı (TL)
 

@@ -52,6 +52,7 @@ export const servicesApi = {
   calculatePrice: (service_id: string, quantity: number) =>
     api.post("/services/price", { service_id, quantity }),
   public: () => api.get("/services/public"),
+  featured: () => api.get("/services/featured"),
 };
 
 // ──────────────────────────────────────────────

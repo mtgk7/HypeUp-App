@@ -78,36 +78,68 @@ interface PublicService {
   platform_name: string;
 }
 
-// Popüler paketler — new-order ile aynı eşleştirme
-const QUICK_PICKS = [
-  { label: "Instagram Takipçi", platform: "Instagram", nameContains: "no refill: no photo",   maxPrice: 600,   qty: 1000,  emoji: "📸" },
-  { label: "Instagram Beğeni",  platform: "Instagram", nameContains: "low quality: no refill", maxPrice: 200,   qty: 1000,  emoji: "❤️" },
-  { label: "TikTok İzlenme",    platform: "TikTok",    nameContains: "tiktok views - [speed",  maxPrice: 50,    qty: 10000, emoji: "👁️" },
-  { label: "TikTok Hikaye",     platform: "TikTok",    nameContains: "story views",            maxPrice: 100,   qty: 1000,  emoji: "🎵" },
-  { label: "YouTube İzlenme",   platform: "YouTube",   nameContains: "worldwide geo",          maxPrice: 200,   qty: 10000, emoji: "🎬" },
-  { label: "YouTube Abone",     platform: "YouTube",   nameContains: "aboneleri",              maxPrice: 5000,  qty: 100,   emoji: "▶️" },
-  { label: "Telegram Üye",      platform: "Telegram",  nameContains: "refill 30d",             maxPrice: 400,   qty: 1000,  emoji: "✈️" },
-  { label: "Spotify Dinlenme",  platform: "Spotify",   nameContains: "free plays",             maxPrice: 100,   qty: 5000,  emoji: "🎧" },
-];
+// Popüler paketler — backend /featured endpoint'inden (kesin retail/tier fiyatları)
+interface FeaturedOption {
+  qty: number;
+  unit_per_1000: number;
+  price_tl: number;
+}
+interface FeaturedPackage {
+  label: string;
+  emoji: string;
+  platform: string;
+  service_id: string;
+  jap_service_id: number;
+  min_order: number;
+  default_qty: number;
+  options: FeaturedOption[];
+}
 
-function pickPrice(pick: typeof QUICK_PICKS[0], services: PublicService[]): string {
-  const matches = services
-    .filter(s => s.platform_name === pick.platform
-      && s.service_name.toLowerCase().includes(pick.nameContains.toLowerCase())
-      && s.hypeup_tl_price <= pick.maxPrice)
-    .sort((a, b) => a.hypeup_tl_price - b.hypeup_tl_price);
-  const svc = matches[0];
-  if (!svc) return "—";
-  const qty = Math.max(pick.qty, svc.min_order);
-  return `₺${((svc.hypeup_tl_price / 1000) * qty).toFixed(2)}`;
+function PackageCard({ pkg }: { pkg: FeaturedPackage }) {
+  const [qty, setQty] = useState<number>(pkg.default_qty);
+  const opt = pkg.options.find((o) => o.qty === qty) ?? pkg.options[0];
+  return (
+    <div className="group bg-[#0f0d1c] border border-white/[0.08] hover:border-violet-500/40 rounded-2xl p-4 transition-all flex flex-col">
+      <div className="text-2xl mb-2">{pkg.emoji}</div>
+      <p className="text-sm font-semibold text-white/90 leading-tight mb-3">{pkg.label}</p>
+
+      <div className="flex flex-wrap gap-1.5 mb-3">
+        {pkg.options.map((o) => (
+          <button
+            key={o.qty}
+            onClick={() => setQty(o.qty)}
+            className={`text-[11px] font-semibold px-2 py-1 rounded-md border transition ${
+              o.qty === opt.qty
+                ? "bg-violet-600 border-violet-500 text-white"
+                : "bg-white/[0.03] border-white/10 text-white/50 hover:text-white/80 hover:border-white/25"
+            }`}
+          >
+            {o.qty.toLocaleString("tr-TR")}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-auto">
+        <p className="text-xl font-black text-violet-400">
+          ₺{opt.price_tl.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p>
+        <p className="text-[11px] text-white/30 mb-3">{opt.qty.toLocaleString("tr-TR")} adet</p>
+        <Link
+          href="/register"
+          className="flex items-center justify-center gap-1 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition"
+        >
+          Sipariş Ver <ChevronRight className="w-3 h-3" />
+        </Link>
+      </div>
+    </div>
+  );
 }
 
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [services, setServices] = useState<PublicService[]>([]);
+  const [featured, setFeatured] = useState<FeaturedPackage[]>([]);
   const [loadingSvc, setLoadingSvc] = useState(true);
-  const [activePlatform, setActivePlatform] = useState("Hepsi");
-  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -116,9 +148,13 @@ export default function LandingPage() {
       const start = Date.now();
       while (!cancelled && Date.now() - start < 90000) {
         try {
-          const res = await servicesApi.public();
-          if (!cancelled && Array.isArray(res.data) && res.data.length > 0) {
-            setServices(res.data);
+          const [feat, pub] = await Promise.all([
+            servicesApi.featured(),
+            servicesApi.public().catch(() => ({ data: [] })),
+          ]);
+          if (!cancelled && Array.isArray(feat.data) && feat.data.length > 0) {
+            setFeatured(feat.data);
+            if (Array.isArray(pub.data)) setServices(pub.data);
             setLoadingSvc(false);
             return;
           }
@@ -132,8 +168,6 @@ export default function LandingPage() {
     return () => { cancelled = true; };
   }, []);
 
-  const filtered = activePlatform === "Hepsi" ? services : services.filter(s => s.platform_name === activePlatform);
-  const displayed = showAll ? filtered : filtered.slice(0, 10);
   const platformCounts = PLATFORMS.slice(1).reduce<Record<string, number>>((acc, p) => {
     acc[p] = services.filter(s => s.platform_name === p).length;
     return acc;
@@ -198,78 +232,55 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Sağ — canlı servis kartı */}
+          {/* Sağ — güven kartı */}
           <div className="lg:flex-shrink-0 w-full lg:w-[340px]">
-            <div className="bg-[#0f0d1c] border border-white/[0.08] rounded-2xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-xs text-white/40 font-medium">Öne Çıkan Servisler</span>
-                </div>
-                <span className="text-xs text-violet-400">Anlık fiyatlar</span>
+            <div className="bg-[#0f0d1c] border border-white/[0.08] rounded-2xl p-6">
+              <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 mb-5 text-xs text-emerald-300 font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Kayıt olana 50 TL bonus
               </div>
-              {loadingSvc ? (
-                <div className="flex items-center justify-center py-8 text-white/20">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                </div>
-              ) : (
-                <div className="divide-y divide-white/[0.05]">
-                  {services
-                    .filter(s => ["Instagram", "TikTok", "YouTube", "Telegram"].includes(s.platform_name))
-                    .slice(0, 5)
-                    .map((s, i) => {
-                      const meta = PLATFORM_META[s.platform_name];
-                      const Icon = meta?.icon;
-                      const minTotal = (s.hypeup_tl_price / 1000) * s.min_order;
-                      return (
-                        <div key={i} className="flex items-center gap-3 px-5 py-3.5">
-                          {Icon && <Icon className="w-4 h-4 shrink-0" color={meta.color} />}
-                          <span className="text-[13px] text-white/65 truncate flex-1">{s.service_name}</span>
-                          <span className="text-[13px] font-bold text-white shrink-0">₺{minTotal.toFixed(2)}</span>
-                        </div>
-                      );
-                    })}
-                </div>
-              )}
-              <div className="px-5 py-3 bg-violet-600/10 border-t border-violet-500/20">
-                <button
-                  onClick={() => document.getElementById("services-section")?.scrollIntoView({ behavior: "smooth" })}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs text-violet-300 font-semibold hover:text-violet-200 transition"
-                >
-                  Tüm servisleri gör <ChevronRight className="w-3.5 h-3.5" />
-                </button>
+              <h3 className="text-lg font-bold mb-4">Neden HypeUp?</h3>
+              <div className="space-y-3">
+                {[
+                  "Şifre istemeden, sadece link ile",
+                  "Anlık başlangıç, gerçek hesaplar",
+                  "Şeffaf TL fiyat — sürpriz yok",
+                  "7/24 Telegram destek",
+                ].map((t) => (
+                  <div key={t} className="flex items-start gap-2.5">
+                    <div className="w-5 h-5 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check className="w-3 h-3 text-violet-400" />
+                    </div>
+                    <span className="text-[13px] text-white/60">{t}</span>
+                  </div>
+                ))}
               </div>
+              <button
+                onClick={() => document.getElementById("paketler")?.scrollIntoView({ behavior: "smooth" })}
+                className="mt-5 w-full flex items-center justify-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold py-2.5 rounded-xl transition"
+              >
+                Paketleri Gör <ArrowRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
       </section>
 
       {/* POPÜLER PAKETLER — sayfanın üstü */}
-      <section className="max-w-6xl mx-auto px-5 pb-4">
+      <section id="paketler" className="max-w-6xl mx-auto px-5 pb-4 scroll-mt-20">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-1.5">Popüler Paketler</h2>
-          <p className="text-white/35 text-sm">En çok tercih edilen hizmetler. Kayıt ol, hemen sipariş ver.</p>
+          <p className="text-white/35 text-sm">Miktarı seç, fiyatı anında gör. Kayıt ol, hemen sipariş ver.</p>
         </div>
         {loadingSvc ? (
           <div className="flex items-center gap-2 text-white/30 text-sm py-6">
             <Loader2 className="w-5 h-5 animate-spin" /> Yükleniyor...
           </div>
+        ) : featured.length === 0 ? (
+          <p className="text-white/30 text-sm py-6">Paketler şu an yüklenemedi, birazdan tekrar dene.</p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {QUICK_PICKS.map((pick) => (
-              <Link
-                key={pick.label}
-                href="/register"
-                className="group bg-[#0f0d1c] border border-white/[0.08] hover:border-violet-500/50 hover:bg-violet-500/5 rounded-2xl p-4 transition-all"
-              >
-                <div className="text-2xl mb-2">{pick.emoji}</div>
-                <p className="text-sm font-semibold text-white/90 group-hover:text-white leading-tight mb-2">{pick.label}</p>
-                <p className="text-base font-bold text-white">{pick.qty.toLocaleString()} <span className="text-xs font-normal text-white/40">adet</span></p>
-                <p className="text-xl font-black text-violet-400 mt-1">{pickPrice(pick, services)}</p>
-                <div className="flex items-center justify-center gap-1 mt-3 bg-violet-600/15 group-hover:bg-violet-600/30 text-violet-300 text-xs font-semibold py-2 rounded-lg transition">
-                  Sipariş Ver <ChevronRight className="w-3 h-3" />
-                </div>
-              </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {featured.map((pkg) => (
+              <PackageCard key={pkg.jap_service_id} pkg={pkg} />
             ))}
           </div>
         )}
@@ -300,11 +311,7 @@ export default function LandingPage() {
             return (
               <button
                 key={p}
-                onClick={() => {
-                  setActivePlatform(p);
-                  setShowAll(false);
-                  document.getElementById("services-section")?.scrollIntoView({ behavior: "smooth" });
-                }}
+                onClick={() => document.getElementById("paketler")?.scrollIntoView({ behavior: "smooth" })}
                 className="group flex flex-col items-center gap-2.5 p-4 rounded-xl border border-white/[0.07] bg-[#0f0d1c] hover:border-white/20 transition-all"
                 style={{ "--platform-dim": meta.dimColor } as React.CSSProperties}
               >
@@ -319,92 +326,6 @@ export default function LandingPage() {
               </button>
             );
           })}
-        </div>
-      </section>
-
-      {/* SERVİSLER */}
-      <section id="services-section" className="max-w-6xl mx-auto px-5 pb-16">
-        <div className="border border-white/[0.08] rounded-2xl overflow-hidden bg-[#0d0b1a]">
-          {/* Header */}
-          <div className="px-6 py-5 border-b border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h2 className="font-bold text-base text-white">Hizmet Katalogu</h2>
-              <p className="text-xs text-white/30 mt-0.5">Anlık kur ile güncel TL fiyatları</p>
-            </div>
-            <div className="flex gap-1.5 flex-wrap">
-              {PLATFORMS.map((p) => (
-                <button key={p} onClick={() => { setActivePlatform(p); setShowAll(false); }}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                    activePlatform === p
-                      ? "bg-violet-600/20 border-violet-500/40 text-violet-300"
-                      : "bg-transparent border-white/[0.08] text-white/40 hover:text-white/70 hover:border-white/20"
-                  }`}>
-                  {p}{p !== "Hepsi" && platformCounts[p] ? ` (${platformCounts[p]})` : ""}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {loadingSvc ? (
-            <div className="flex items-center justify-center py-16 text-white/20">
-              <Loader2 className="w-5 h-5 animate-spin mr-2" /> Servisler yükleniyor...
-            </div>
-          ) : (
-            <>
-              <div className="divide-y divide-white/[0.04]">
-                {displayed.map((s) => {
-                  const meta = PLATFORM_META[s.platform_name];
-                  const Icon = meta?.icon;
-                  const minTotal = (s.hypeup_tl_price / 1000) * s.min_order;
-                  return (
-                    <div key={s.id} className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.02] transition group">
-                      {Icon && (
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ background: meta.dimColor }}>
-                          <Icon className="w-4 h-4" color={meta.color} />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-white/85 truncate">{s.service_name}</p>
-                        <p className="text-[11px] text-white/25 mt-0.5">Min {s.min_order.toLocaleString()} adet</p>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <div className="text-right">
-                          <p className="font-bold text-white text-sm">₺{minTotal.toFixed(2)}</p>
-                          <p className="text-[10px] text-white/25">/{s.min_order.toLocaleString()} adet</p>
-                        </div>
-                        <Link href="/register"
-                          className="bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-3.5 py-2 rounded-lg transition sm:opacity-0 sm:group-hover:opacity-100">
-                          Sipariş Ver
-                        </Link>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {filtered.length === 0 && (
-                <p className="text-center text-white/20 py-12 text-sm">Bu platformda servis bulunamadı.</p>
-              )}
-
-              {filtered.length > 10 && (
-                <div className="px-6 py-4 border-t border-white/[0.06] flex justify-center">
-                  <button onClick={() => setShowAll(!showAll)}
-                    className="text-sm text-violet-400 hover:text-violet-300 font-medium flex items-center gap-1.5 transition">
-                    {showAll ? "Daha az göster" : `Tüm ${filtered.length} hizmeti gör`}
-                    <ChevronRight className={`w-4 h-4 transition-transform ${showAll ? "rotate-90" : ""}`} />
-                  </button>
-                </div>
-              )}
-
-              <div className="px-6 py-4 border-t border-violet-500/15 bg-violet-600/[0.06] flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-sm text-white/45">Sipariş vermek için kayıt ol, <span className="text-emerald-400 font-semibold">50 TL</span> hoş geldin bonusu kazan.</p>
-                <Link href="/register" className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition whitespace-nowrap shadow-lg shadow-violet-600/20">
-                  Ücretsiz Kayıt Ol
-                </Link>
-              </div>
-            </>
-          )}
         </div>
       </section>
 
@@ -551,7 +472,7 @@ export default function LandingPage() {
         <div className="grid grid-cols-5 h-16">
           {[
             { icon: Home,         label: "Ana Sayfa", href: "/" },
-            { icon: Search,       label: "Servisler", action: () => document.getElementById("services-section")?.scrollIntoView({ behavior: "smooth" }) },
+            { icon: Search,       label: "Paketler",  action: () => document.getElementById("paketler")?.scrollIntoView({ behavior: "smooth" }) },
             { icon: ShoppingCart, label: "Sipariş",   href: "/register" },
             { icon: Headphones,   label: "Destek",    href: "/register" },
             { icon: LogIn,        label: "Giriş",     href: "/login" },
