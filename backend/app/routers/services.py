@@ -150,6 +150,13 @@ async def list_services(_user: dict = Depends(get_current_user)):
         cat = svc.pop("categories", {}) or {}
         svc["platform_name"] = cat.get("platform_name", "")
         svc["category_name"] = cat.get("category_name", "")
+        # Tier'lı servislerde gösterilen fiyat = retail tier fiyatı (sipariş ile aynı)
+        try:
+            tier = get_tier_price(int(svc["jap_service_id"]), 1000)
+        except (TypeError, ValueError):
+            tier = None
+        if tier is not None:
+            svc["hypeup_tl_price"] = float(tier)
         services_flat.append(svc)
 
     return {
