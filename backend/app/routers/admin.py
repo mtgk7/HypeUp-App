@@ -232,14 +232,17 @@ async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
             logger.warning(f"[SyncPRM4U] Batch yazma hatası: {e}")
             skipped += len(chunk)
 
-    # Tanınmayan platformların eski DB kayıtlarını pasif yap
+    # Aktif olmayan kategorilerdeki tüm servisleri pasif yap
+    inactive_cat_ids = [cat_id for platform, cat_id in platform_to_cat.items() if platform not in ACTIVE_PLATFORMS]
     deactivated = 0
-    for i in range(0, len(skipped_ids), BATCH):
-        try:
-            db.table("services").update({"is_active": False}).in_("jap_service_id", skipped_ids[i:i+BATCH]).execute()
-            deactivated += len(skipped_ids[i:i+BATCH])
-        except Exception as e:
-            logger.warning(f"[SyncPRM4U] Pasif yapma hatası: {e}")
+    if inactive_cat_ids:
+        DEACT_BATCH = 100
+        for i in range(0, len(inactive_cat_ids), DEACT_BATCH):
+            try:
+                db.table("services").update({"is_active": False}).in_("category_id", inactive_cat_ids[i:i+DEACT_BATCH]).execute()
+                deactivated += len(inactive_cat_ids[i:i+DEACT_BATCH])
+            except Exception as e:
+                logger.warning(f"[SyncPRM4U] Pasif yapma hatası: {e}")
 
     return {"synced": synced, "skipped": skipped, "deactivated": deactivated, "dolar_kuru": dolar_kuru}
 

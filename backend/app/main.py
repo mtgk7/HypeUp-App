@@ -143,17 +143,16 @@ async def full_sync():
                 logger.warning(f"[FullSync] Batch hatası: {e}")
                 skipped += len(chunk)
 
-        # Tanınmayan platformların eski DB kayıtlarını pasif yap
-        DEACT_BATCH = 200
-        deactivated = 0
-        for i in range(0, len(skipped_ids), DEACT_BATCH):
-            try:
-                db.table("services").update({"is_active": False}).in_("jap_service_id", skipped_ids[i:i+DEACT_BATCH]).execute()
-                deactivated += len(skipped_ids[i:i+DEACT_BATCH])
-            except Exception as e:
-                logger.warning(f"[FullSync] Pasif yapma hatası: {e}")
-        if deactivated:
-            logger.info(f"[FullSync] {deactivated} tanınmayan servis pasif yapıldı")
+        # Aktif olmayan kategorilerdeki tüm servisleri pasif yap
+        inactive_cat_ids = [cat_id for platform, cat_id in platform_to_cat.items() if platform not in ACTIVE_PLATFORMS]
+        if inactive_cat_ids:
+            DEACT_BATCH = 100
+            for i in range(0, len(inactive_cat_ids), DEACT_BATCH):
+                try:
+                    db.table("services").update({"is_active": False}).in_("category_id", inactive_cat_ids[i:i+DEACT_BATCH]).execute()
+                except Exception as e:
+                    logger.warning(f"[FullSync] Pasif yapma hatası: {e}")
+            logger.info(f"[FullSync] Aktif olmayan {len(inactive_cat_ids)} kategorinin servisleri pasif yapıldı")
 
         logger.info(f"[FullSync] Tamamlandı: {synced} güncellendi, {skipped} atlandı, kur ₺{dolar_kuru:.2f}")
         await send_telegram(
