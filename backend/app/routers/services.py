@@ -134,19 +134,29 @@ async def list_services(_user: dict = Depends(get_current_user)):
         .order("display_order")
         .execute()
     )
-    services_raw = (
-        supabase.table("services")
-        .select("*, categories(platform_name, category_name)")
-        .eq("is_active", True)
-        .execute()
-    )
+    # Tüm aktif servisleri sayfalayarak çek (Supabase tek sorguda 1000 ile sınırlı)
+    services_data = []
+    page_size = 1000
+    offset = 0
+    while True:
+        batch = (
+            supabase.table("services")
+            .select("*, categories(platform_name, category_name)")
+            .eq("is_active", True)
+            .range(offset, offset + page_size - 1)
+            .execute()
+        ).data or []
+        services_data.extend(batch)
+        if len(batch) < page_size:
+            break
+        offset += page_size
 
     if not categories.data:
         return {"categories": [], "services": []}
 
     # Flatten: category join alanlarını servis root'una taşı
     services_flat = []
-    for svc in (services_raw.data or []):
+    for svc in services_data:
         cat = svc.pop("categories", {}) or {}
         svc["platform_name"] = cat.get("platform_name", "")
         svc["category_name"] = cat.get("category_name", "")
