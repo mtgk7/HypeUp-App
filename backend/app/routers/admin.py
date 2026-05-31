@@ -188,6 +188,7 @@ async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
 
     rows_to_upsert = []
     skipped = 0
+    skipped_ids = []
 
     for svc in prm4u_services:
         try:
@@ -201,6 +202,7 @@ async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
             cat_id = platform_to_cat.get(platform)
             if not cat_id:
                 skipped += 1
+                skipped_ids.append(svc_id)
                 continue
 
             rows_to_upsert.append({
@@ -230,7 +232,16 @@ async def sync_prm4u_services(_admin: dict = Depends(require_admin)):
             logger.warning(f"[SyncPRM4U] Batch yazma hatası: {e}")
             skipped += len(chunk)
 
-    return {"synced": synced, "skipped": skipped, "dolar_kuru": dolar_kuru}
+    # Tanınmayan platformların eski DB kayıtlarını pasif yap
+    deactivated = 0
+    for i in range(0, len(skipped_ids), BATCH):
+        try:
+            db.table("services").update({"is_active": False}).in_("jap_service_id", skipped_ids[i:i+BATCH]).execute()
+            deactivated += len(skipped_ids[i:i+BATCH])
+        except Exception as e:
+            logger.warning(f"[SyncPRM4U] Pasif yapma hatası: {e}")
+
+    return {"synced": synced, "skipped": skipped, "deactivated": deactivated, "dolar_kuru": dolar_kuru}
 
 
 @router.post("/services/sync-jap")

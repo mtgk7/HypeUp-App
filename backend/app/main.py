@@ -107,7 +107,7 @@ async def full_sync():
             platform_to_cat.setdefault(row["platform_name"], row["id"])
 
         from app.routers.admin import _guess_platform, ACTIVE_PLATFORMS
-        rows, skipped = [], 0
+        rows, skipped, skipped_ids = [], 0, []
         for svc in prm4u_services:
             try:
                 svc_id   = int(svc.get("service") or svc.get("id", 0))
@@ -117,6 +117,7 @@ async def full_sync():
                 cat_id   = platform_to_cat.get(platform)
                 if not cat_id:
                     skipped += 1
+                    skipped_ids.append(svc_id)
                     continue
                 rows.append({
                     "jap_service_id": svc_id,
@@ -141,6 +142,18 @@ async def full_sync():
             except Exception as e:
                 logger.warning(f"[FullSync] Batch hatası: {e}")
                 skipped += len(chunk)
+
+        # Tanınmayan platformların eski DB kayıtlarını pasif yap
+        DEACT_BATCH = 200
+        deactivated = 0
+        for i in range(0, len(skipped_ids), DEACT_BATCH):
+            try:
+                db.table("services").update({"is_active": False}).in_("jap_service_id", skipped_ids[i:i+DEACT_BATCH]).execute()
+                deactivated += len(skipped_ids[i:i+DEACT_BATCH])
+            except Exception as e:
+                logger.warning(f"[FullSync] Pasif yapma hatası: {e}")
+        if deactivated:
+            logger.info(f"[FullSync] {deactivated} tanınmayan servis pasif yapıldı")
 
         logger.info(f"[FullSync] Tamamlandı: {synced} güncellendi, {skipped} atlandı, kur ₺{dolar_kuru:.2f}")
         await send_telegram(
