@@ -22,44 +22,35 @@ PRM4U_KEY = os.getenv("PRM4U_API_KEY", "")
 # --- 0. PUBLIC — Auth gerektirmez, landing page için ---
 @router.get("/public")
 async def list_public_services(response: Response):
-    """Giriş gerektirmez. Landing page servis + fiyat listesi için. Tüm aktif servisleri sayfalayarak döner."""
+    """Giriş gerektirmez. Landing page + sipariş formu dropdown için. Sadece seçili servisleri döner."""
     supabase = get_supabase_client()
     rate = get_current_rate()
     response.headers["Cache-Control"] = "no-store"  # fiyat asla önbellekten gelmesin
     services = []
-    page_size = 1000
-    offset = 0
-    while True:
-        result = (
-            supabase.table("services")
-            .select("id, service_name, jap_service_id, jap_dolar_price, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
-            .eq("is_active", True)
-            .range(offset, offset + page_size - 1)
-            .execute()
-        )
-        batch = result.data or []
-        for svc in batch:
-            cat = svc.pop("categories", {}) or {}
-            # Tier'lı servislerde gösterilen fiyat = retail tier fiyatı (checkout ile aynı),
-            # diğerlerinde formül fiyatı — ikisi de güncel kurdan CANLI hesaplanır (DB'ye bağlı değil).
-            tier = get_tier_price(int(svc["jap_service_id"]), 1000, rate)
-            if tier is not None:
-                display_price = tier
-            else:
-                jd = svc.get("jap_dolar_price")
-                display_price = hesapla_hypeup_satis_fiyati(float(jd), rate) if jd else float(svc["hypeup_tl_price"])
-            services.append({
-                "id":              svc["id"],
-                "service_name":    svc["service_name"],
-                "hypeup_tl_price": float(display_price),
-                "min_order":       svc["min_order"],
-                "max_order":       svc["max_order"],
-                "platform_name":   cat.get("platform_name", ""),
-                "category_name":   cat.get("category_name", ""),
-            })
-        if len(batch) < page_size:
-            break
-        offset += page_size
+    result = (
+        supabase.table("services")
+        .select("id, service_name, jap_service_id, jap_dolar_price, hypeup_tl_price, min_order, max_order, categories(platform_name, category_name)")
+        .eq("is_active", True)
+        .in_("jap_service_id", ALLOWED_JAP_SERVICE_IDS)
+        .execute()
+    )
+    for svc in result.data or []:
+        cat = svc.pop("categories", {}) or {}
+        tier = get_tier_price(int(svc["jap_service_id"]), 1000, rate)
+        if tier is not None:
+            display_price = tier
+        else:
+            jd = svc.get("jap_dolar_price")
+            display_price = hesapla_hypeup_satis_fiyati(float(jd), rate) if jd else float(svc["hypeup_tl_price"])
+        services.append({
+            "id":              svc["id"],
+            "service_name":    svc["service_name"],
+            "hypeup_tl_price": float(display_price),
+            "min_order":       svc["min_order"],
+            "max_order":       svc["max_order"],
+            "platform_name":   cat.get("platform_name", ""),
+            "category_name":   cat.get("category_name", ""),
+        })
     return services
 
 
