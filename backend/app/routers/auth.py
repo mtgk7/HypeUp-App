@@ -39,11 +39,13 @@ async def register(body: RegisterRequest):
         "password_hash": hash_password(body.password),
         "referral_code": new_ref_code,
         "referred_by": referrer_id,
-        "balance": 0,
     }).execute()
 
     user = new_user.data[0]
-    current_balance = float(user["balance"])
+    # DB trigger sets balance=50 on INSERT — explicitly reset to 0
+    db.table("users").update({"balance": 0}).eq("id", user["id"]).execute()
+    user["balance"] = 0
+    current_balance = 0.0
 
     # Referans bonusu
     if referrer_id:
