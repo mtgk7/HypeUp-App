@@ -56,7 +56,7 @@ const PLATFORMS = ["Hepsi", "Instagram", "TikTok", "YouTube", "X", "Telegram", "
 const FACTS = [
   { value: "1.400+", label: "Aktif Hizmet" },
   { value: "9",      label: "Platform" },
-  { value: "₺50",   label: "Başlangıç Bonusu" },
+  { value: "%75'e",  label: "Yükleme Bonusu" },
   { value: "7/24",   label: "Destek" },
 ];
 
@@ -65,7 +65,7 @@ const FAQS = [
   { q: "Ödeme nasıl yapılır?",                        a: "Papara veya havale ile kolayca bakiye yükleyebilirsiniz. Ödemeniz onaylandıktan sonra bakiyeniz hesabınıza anında yansır." },
   { q: "Hesabım tehlikeye girer mi?",                 a: "Hayır. Şifrenizi asla istemiyoruz. Sadece profil linkinizi girmeniz yeterli." },
   { q: "Fiyatlar neden değişiyor?",                   a: "Fiyatlarımız anlık döviz kuruna göre güncellenir. Gösterilen fiyatlar güncel TL karşılığıdır." },
-  { q: "50 TL bonus nasıl kullanılır?",               a: "Kayıt olduktan sonra bakiyenize otomatik olarak 50 TL eklenir. Herhangi bir servise sipariş verebilirsiniz." },
+  { q: "Yükleme bonusu nasıl çalışır?",               a: "₺100 yükleyene ₺25, ₺150 yükleyene ₺50, ₺200 yükleyene ₺75 bonus otomatik olarak eklenir. Ne kadar yüklersen o kadar kazanırsın!" },
   { q: "Sipariş iptal edebilir miyim?",               a: "İşleme alınmamış siparişler iptal edilebilir. İşleme alınan siparişler için destek hattımızla iletişime geçin." },
 ];
 
@@ -234,8 +234,8 @@ export default function LandingPage() {
               <Link href="/register" className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-violet-600/25">
                 Ücretsiz Başla <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link href="/register" className="inline-flex items-center gap-2 border border-white/10 hover:border-violet-500/40 hover:bg-violet-500/5 text-white/60 hover:text-white font-medium px-6 py-3 rounded-xl text-sm transition">
-                50 TL Bonus Al
+              <Link href="/register" className="inline-flex items-center gap-2 border border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/5 text-amber-400/80 hover:text-amber-300 font-medium px-6 py-3 rounded-xl text-sm transition">
+                🎁 Bonus Kazan
               </Link>
             </div>
           </div>
@@ -244,7 +244,7 @@ export default function LandingPage() {
           <div className="lg:flex-shrink-0 w-full lg:w-[340px]">
             <div className="bg-[#0f0d1c] border border-white/[0.08] rounded-2xl p-6">
               <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 mb-5 text-xs text-emerald-300 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Kayıt olana 50 TL bonus
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> 100 TL yükle, 25 TL kazan — 200 TL yükle, 75 TL kazan
               </div>
               <h3 className="text-lg font-bold mb-4">Neden HypeUp?</h3>
               <div className="space-y-3">
@@ -252,7 +252,7 @@ export default function LandingPage() {
                   "Şifre istemeden, sadece link ile",
                   "Anlık başlangıç, gerçek hesaplar",
                   "Şeffaf TL fiyat — sürpriz yok",
-                  "7/24 Telegram destek",
+                  "Yükleme bonusu: 100 TL → +25 TL, 200 TL → +75 TL",
                 ].map((t) => (
                   <div key={t} className="flex items-start gap-2.5">
                     <div className="w-5 h-5 rounded-full bg-violet-500/15 flex items-center justify-center shrink-0 mt-0.5">
@@ -358,8 +358,8 @@ export default function LandingPage() {
               },
               {
                 n: "03",
-                title: "50 TL Başlangıç",
-                body: "Kayıt olan her kullanıcıya 50 TL deneme bakiyesi verilir. Kart bilgisi veya ön ödeme gerekmez.",
+                title: "Yükleme Bonusu",
+                body: "100 TL yükle +25 TL, 150 TL yükle +50 TL, 200 TL yükle +75 TL bonus kazan. Ne kadar yüklersen o kadar kazanırsın.",
               },
             ].map(({ n, title, body }) => (
               <div key={n} className="bg-[#0c0a19] p-8 hover:bg-[#100e1f] transition-colors">
@@ -380,7 +380,7 @@ export default function LandingPage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           {[
-            { n: "1", title: "Kayıt Ol",         body: "E-posta ile kayıt ol, 50 TL bonus bakiyeni al. 30 saniye sürer." },
+            { n: "1", title: "Kayıt Ol",         body: "E-posta ile kayıt ol, 30 saniyede hesabın hazır." },
             { n: "2", title: "Servis Seç",        body: "Platform ve hizmet seç. Linki gir, adet belirle, anlık fiyat gör." },
             { n: "3", title: "Otomatik Teslim",   body: "Sipariş sistemimize iletilir, büyümen hemen başlar." },
           ].map(({ n, title, body }) => (
@@ -431,7 +431,7 @@ export default function LandingPage() {
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
               <h2 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight">Hemen büyümeye başla.</h2>
-              <p className="text-white/70 text-[15px]">İlk 50 TL bizden. Kart bilgisi gerekmez.</p>
+              <p className="text-white/70 text-[15px]">100 TL yükle, 25 TL bizden. 200 TL yükle, 75 TL bizden.</p>
             </div>
             <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-violet-700 font-bold px-7 py-3.5 rounded-xl text-sm hover:bg-violet-50 transition shadow-xl">
               Ücretsiz Kayıt Ol <ArrowRight className="w-4 h-4" />

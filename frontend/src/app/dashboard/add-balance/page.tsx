@@ -1,11 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Wallet, Copy, Check, Loader2, ChevronRight, Zap, CheckCircle } from "lucide-react";
+import { Wallet, Copy, Check, Loader2, ChevronRight, Zap, CheckCircle, Gift } from "lucide-react";
 import { paymentApi } from "@/lib/api";
 
-const PRESETS = [50, 100, 200, 500, 1000];
+const PRESETS = [50, 100, 150, 200, 500];
 const PAPARA_NO = "1773332769";
+
+const BONUS_TIERS = [
+  { threshold: 200, bonus: 75 },
+  { threshold: 150, bonus: 50 },
+  { threshold: 100, bonus: 25 },
+];
+
+function getBonus(amount: number): number {
+  for (const tier of BONUS_TIERS) {
+    if (amount >= tier.threshold) return tier.bonus;
+  }
+  return 0;
+}
 
 export default function AddBalancePage() {
   const [step, setStep] = useState<"amount" | "info" | "done">("amount");
@@ -138,28 +151,62 @@ export default function AddBalancePage() {
     );
   }
 
+  const bonus = amount && !isNaN(amount) ? getBonus(amount) : 0;
+  const nextTier = BONUS_TIERS.slice().reverse().find(t => !amount || isNaN(amount) || amount < t.threshold);
+
   return (
     <div className="max-w-lg">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Wallet className="w-5 h-5 text-violet-400" /> Bakiye Yükle
         </h1>
         <p className="text-white/30 text-sm mt-1">Papara ile anında bakiye ekle</p>
       </div>
 
+      {/* Bonus Tiers Banner */}
+      <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Gift className="w-4 h-4 text-amber-400" />
+          <span className="text-amber-300 text-sm font-semibold">Yükleme Bonusu — Ne kadar yüklersen o kadar kazan!</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {BONUS_TIERS.slice().reverse().map((tier) => {
+            const active = amount && !isNaN(amount) && amount >= tier.threshold;
+            return (
+              <div key={tier.threshold}
+                className={`rounded-xl p-3 text-center border transition ${
+                  active
+                    ? "bg-amber-500/20 border-amber-400/40"
+                    : "bg-white/3 border-white/8"
+                }`}>
+                <p className={`text-xs mb-1 ${active ? "text-amber-300" : "text-white/40"}`}>₺{tier.threshold} yükle</p>
+                <p className={`text-lg font-bold ${active ? "text-amber-400" : "text-white/30"}`}>+₺{tier.bonus}</p>
+                <p className={`text-xs ${active ? "text-amber-300/70" : "text-white/20"}`}>bonus</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       <div className="bg-[#111] border border-white/8 rounded-2xl p-6 mb-4">
         <p className="text-xs text-white/40 uppercase tracking-widest mb-4">Miktar seç</p>
         <div className="grid grid-cols-3 gap-2 mb-4">
-          {PRESETS.map((p) => (
-            <button key={p} onClick={() => { setSelected(p); setCustom(""); setError(""); }}
-              className={`py-3 rounded-xl text-sm font-semibold border transition ${
-                selected === p && !custom
-                  ? "bg-violet-600/20 border-violet-500/50 text-violet-300"
-                  : "bg-white/3 border-white/8 text-white/60 hover:text-white hover:bg-white/8"
-              }`}>
-              ₺{p}
-            </button>
-          ))}
+          {PRESETS.map((p) => {
+            const pb = getBonus(p);
+            return (
+              <button key={p} onClick={() => { setSelected(p); setCustom(""); setError(""); }}
+                className={`py-3 px-1 rounded-xl text-sm font-semibold border transition relative ${
+                  selected === p && !custom
+                    ? "bg-violet-600/20 border-violet-500/50 text-violet-300"
+                    : "bg-white/3 border-white/8 text-white/60 hover:text-white hover:bg-white/8"
+                }`}>
+                ₺{p}
+                {pb > 0 && (
+                  <span className="block text-[10px] text-amber-400 font-normal">+₺{pb} bonus</span>
+                )}
+              </button>
+            );
+          })}
         </div>
         <div className="relative">
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-sm">₺</span>
@@ -172,11 +219,27 @@ export default function AddBalancePage() {
       </div>
 
       {amount && !isNaN(amount) && amount >= 10 && (
-        <div className="bg-violet-600/10 border border-violet-500/20 rounded-2xl p-5 mb-4">
-          <div className="flex items-center justify-between">
+        <div className={`border rounded-2xl p-5 mb-4 ${bonus > 0 ? "bg-amber-500/10 border-amber-500/30" : "bg-violet-600/10 border-violet-500/20"}`}>
+          <div className="flex items-center justify-between mb-1">
             <span className="text-sm text-white/50">Yüklenecek miktar</span>
-            <span className="text-xl font-bold text-white">₺{amount.toFixed(2)}</span>
+            <span className="text-lg font-bold text-white">₺{amount.toFixed(2)}</span>
           </div>
+          {bonus > 0 ? (
+            <>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-amber-400/80 flex items-center gap-1"><Gift className="w-3.5 h-3.5" /> Yükleme bonusu</span>
+                <span className="text-lg font-bold text-amber-400">+₺{bonus.toFixed(2)}</span>
+              </div>
+              <div className="border-t border-white/10 pt-2 flex items-center justify-between">
+                <span className="text-sm font-semibold text-white">Hesabına geçecek toplam</span>
+                <span className="text-xl font-bold text-amber-300">₺{(amount + bonus).toFixed(2)}</span>
+              </div>
+            </>
+          ) : nextTier && (
+            <p className="text-xs text-white/30 mt-1">
+              ₺{nextTier.threshold - amount} daha yükle → <span className="text-amber-400">+₺{nextTier.bonus} bonus</span> kazan
+            </p>
+          )}
         </div>
       )}
 

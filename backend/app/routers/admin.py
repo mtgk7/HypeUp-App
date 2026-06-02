@@ -14,6 +14,18 @@ import logging
 router = APIRouter(prefix="/admin", tags=["Admin"])
 logger = logging.getLogger(__name__)
 
+PAYMENT_BONUS_TIERS = [
+    (200, 75),
+    (150, 50),
+    (100, 25),
+]
+
+def _payment_bonus(amount: float) -> float:
+    for threshold, bonus in PAYMENT_BONUS_TIERS:
+        if amount >= threshold:
+            return float(bonus)
+    return 0.0
+
 
 @router.get("/stats", response_model=AdminStatsResponse)
 async def get_stats(_admin: dict = Depends(require_admin)):
@@ -414,14 +426,20 @@ async def approve_payment(payment_id: str, _admin: dict = Depends(require_admin)
     if not user_res.data:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
 
-    new_balance = round(float(user_res.data[0]["balance"]) + float(tx["amount_tl"]), 2)
+    amount = float(tx["amount_tl"])
+    bonus = _payment_bonus(amount)
+    new_balance = round(float(user_res.data[0]["balance"]) + amount + bonus, 2)
     db.table("users").update({"balance": new_balance}).eq("id", tx["user_id"]).execute()
     db.table("payment_transactions").update({"status": "completed"}).eq("id", payment_id).execute()
 
     from app.routers.notifications import create_notification
     from app.services.telegram_service import send_telegram
-    create_notification(tx["user_id"], "Bakiye Yüklendi 💰", f"₺{float(tx['amount_tl']):.2f} bakiyenize yüklendi.", "success")
-    await send_telegram(f"✅ Ödeme onaylandı: ₺{float(tx['amount_tl']):.2f} — Ref: {tx.get('reference_code','')}")
+    notif_msg = f"₺{amount:.2f} bakiyenize yüklendi."
+    if bonus > 0:
+        notif_msg += f" 🎁 ₺{bonus:.0f} yükleme bonusu hediye edildi!"
+    create_notification(tx["user_id"], "Bakiye Yüklendi 💰", notif_msg, "success")
+    bonus_text = f" + ₺{bonus:.0f} bonus 🎁" if bonus > 0 else ""
+    await send_telegram(f"✅ Ödeme onaylandı: ₺{amount:.2f}{bonus_text} — Ref: {tx.get('reference_code','')}")
     return {"status": "completed", "new_balance": new_balance}
 
 

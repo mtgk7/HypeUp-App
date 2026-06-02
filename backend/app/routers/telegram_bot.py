@@ -169,22 +169,28 @@ async def handle_callback(cbq: dict):
             if not user_res.data:
                 await answer_callback(cbq_id, "❌ Kullanıcı bulunamadı"); return
 
-            new_bal = round(float(user_res.data[0]["balance"]) + float(tx["amount_tl"]), 2)
+            from app.routers.admin import _payment_bonus
+            amount = float(tx["amount_tl"])
+            bonus = _payment_bonus(amount)
+            new_bal = round(float(user_res.data[0]["balance"]) + amount + bonus, 2)
             db.table("users").update({"balance": new_bal}).eq("id", tx["user_id"]).execute()
             db.table("payment_transactions").update({"status": "completed"}).eq("id", payment_id).execute()
-            create_notification(tx["user_id"], "Bakiye Yüklendi 💰",
-                f"₺{float(tx['amount_tl']):.2f} bakiyenize yüklendi.", "success")
+            notif_msg = f"₺{amount:.2f} bakiyenize yüklendi."
+            if bonus > 0:
+                notif_msg += f" 🎁 ₺{bonus:.0f} yükleme bonusu hediye edildi!"
+            create_notification(tx["user_id"], "Bakiye Yüklendi 💰", notif_msg, "success")
 
+            bonus_line = f"\n🎁 Bonus: ₺{bonus:.0f}" if bonus > 0 else ""
             await answer_callback(cbq_id, "✅ Onaylandı!")
             await edit_telegram_message(
                 msg_chat or str(s.TELEGRAM_CHAT_ID), msg_id,
                 f"✅ <b>Ödeme Onaylandı</b>\n"
                 f"👤 {user_res.data[0]['email']}\n"
-                f"💰 ₺{float(tx['amount_tl']):.2f}\n"
+                f"💰 ₺{amount:.2f}{bonus_line}\n"
                 f"🔑 Ref: {tx.get('reference_code', '')}\n"
                 f"💳 Yeni bakiye: ₺{new_bal:.2f}"
             )
-            logger.info(f"[TelegramCallback] Ödeme onaylandı: {payment_id}, yeni bakiye ₺{new_bal}")
+            logger.info(f"[TelegramCallback] Ödeme onaylandı: {payment_id}, bonus ₺{bonus}, yeni bakiye ₺{new_bal}")
 
         # ── Ödeme reddet ───────────────────────────
         elif data_str.startswith("reject_payment_"):
