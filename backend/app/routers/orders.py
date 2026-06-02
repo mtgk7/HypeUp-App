@@ -3,8 +3,22 @@ from app.models.schemas import OrderCreateRequest, OrderOut
 from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.services.jap_service import get_jap_client
-from app.routers.services import SERVICE_NAME_OVERRIDES
 from app.services.pricing_service import calculate_order_cost, get_tier_price, calculate_hypeup_price
+
+# Kullanıcıya gösterilecek temiz isimler (jap_service_id → görünen ad)
+_ORDER_NAME_MAP: dict[int, str] = {
+    4908: "Instagram Türk Takipçi",
+    4626: "Instagram Yabancı Takipçi",
+    3:    "Instagram Beğeni",
+    1549: "Instagram Türk Beğeni",
+    4686: "TikTok Takipçi",
+    162:  "TikTok Beğeni",
+    167:  "TikTok İzlenme",
+    3110: "YouTube Abone",
+    4048: "YouTube İzlenme",
+    4259: "X Takipçi",
+    145:  "X Beğeni",
+}
 from app.services.currency_service import get_current_rate
 from app.services.telegram_service import send_telegram, send_telegram_with_buttons
 from app.routers.notifications import create_notification
@@ -131,7 +145,7 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
     )
 
     jid = int(svc.get("jap_service_id") or 0)
-    display_name = SERVICE_NAME_OVERRIDES.get(jid, svc.get("service_name") or "")
+    display_name = _ORDER_NAME_MAP.get(jid, svc.get("service_name") or "")
     return OrderOut(
         **order,
         service_name=display_name,
@@ -157,7 +171,7 @@ async def list_my_orders(user: dict = Depends(get_current_user)):
         cat = svc.get("categories") or {}
         jid = int(svc.get("jap_service_id") or 0)
         raw_name = svc.get("service_name") or ""
-        display_name = SERVICE_NAME_OVERRIDES.get(jid, raw_name)
+        display_name = _ORDER_NAME_MAP.get(jid, raw_name)
         orders.append(OrderOut(
             **row,
             service_name=display_name,
@@ -184,5 +198,5 @@ async def get_order(order_id: str, user: dict = Depends(get_current_user)):
     svc = row.pop("services", {}) or {}
     cat = svc.get("categories") or {}
     jid = int(svc.get("jap_service_id") or 0)
-    display_name = SERVICE_NAME_OVERRIDES.get(jid, svc.get("service_name") or "")
+    display_name = _ORDER_NAME_MAP.get(jid, svc.get("service_name") or "")
     return OrderOut(**row, service_name=display_name, platform_name=cat.get("platform_name"))
