@@ -7,17 +7,59 @@ import { Loader2, ShoppingCart, TrendingUp, Zap, ChevronRight } from "lucide-rea
 
 const PLATFORMS = ["Instagram", "TikTok", "YouTube", "X", "Telegram", "Facebook", "Spotify", "Discord"];
 
-const LINK_PLACEHOLDER: Record<string, string> = {
-  Instagram:  "https://instagram.com/kullanici",
-  TikTok:     "https://tiktok.com/@kullanici",
-  YouTube:    "https://youtube.com/@kanal",
-  X:          "https://x.com/kullanici",
-  Telegram:   "https://t.me/kanal",
-  Facebook:   "https://facebook.com/sayfa",
-  Spotify:    "https://open.spotify.com/artist/...",
-  Discord:    "https://discord.gg/davet",
-  Pinterest:  "https://pinterest.com/kullanici",
+const PROFILE_PLACEHOLDER: Record<string, string> = {
+  Instagram: "@kullanici veya instagram.com/kullanici",
+  TikTok:    "@kullanici veya tiktok.com/@kullanici",
+  YouTube:   "@kanal veya youtube.com/@kanal",
+  X:         "@kullanici veya x.com/kullanici",
+  Telegram:  "@kanal veya t.me/kanal",
+  Facebook:  "sayfa-adi veya facebook.com/sayfa",
+  Spotify:   "https://open.spotify.com/artist/...",
+  Discord:   "https://discord.gg/davet",
+  Pinterest: "@kullanici veya pinterest.com/kullanici",
 };
+
+const CONTENT_PLACEHOLDER: Record<string, string> = {
+  Instagram: "https://instagram.com/p/ABC123 (gönderi linki)",
+  TikTok:    "https://tiktok.com/@kullanici/video/123 (video linki)",
+  YouTube:   "https://youtube.com/watch?v=ABC123 (video linki)",
+  X:         "https://x.com/kullanici/status/123 (gönderi linki)",
+  Spotify:   "https://open.spotify.com/track/... (şarkı linki)",
+};
+
+// Servis adından profil mi içerik mi gerektiğini tespit et
+function isContentService(serviceName: string): boolean {
+  const n = (serviceName || "").toLowerCase();
+  return (
+    n.includes("beğen") || n.includes("like") ||
+    n.includes("izlenme") || n.includes("view") || n.includes("views") ||
+    n.includes("yorum") || n.includes("comment") ||
+    n.includes("story") || n.includes("repost") || n.includes("share") ||
+    n.includes("save") || n.includes("impression") || n.includes("reach") ||
+    n.includes("watch") || n.includes("play") || n.includes("stream") ||
+    n.includes("dislike") || n.includes("reaction")
+  );
+}
+
+function normalizeLink(platform: string, input: string, serviceName?: string): string {
+  const trimmed = input.trim();
+  if (!trimmed) return trimmed;
+  // İçerik servisi veya zaten URL → olduğu gibi gönder
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (isContentService(serviceName || "")) return trimmed;
+  const handle = trimmed.startsWith("@") ? trimmed.slice(1).trim() : trimmed;
+  if (!handle) return trimmed;
+  switch (platform) {
+    case "Instagram": return `https://instagram.com/${handle}`;
+    case "TikTok":    return `https://tiktok.com/@${handle}`;
+    case "YouTube":   return `https://youtube.com/@${handle}`;
+    case "X":         return `https://x.com/${handle}`;
+    case "Telegram":  return `https://t.me/${handle}`;
+    case "Facebook":  return `https://facebook.com/${handle}`;
+    case "Pinterest": return `https://pinterest.com/${handle}`;
+    default: return trimmed;
+  }
+}
 
 // Popüler paketler — backend /featured endpoint'inden (kesin retail/tier fiyatları)
 interface FeaturedOption {
@@ -115,6 +157,7 @@ export default function NewOrderPage() {
     setServices(allServices.filter(s => s.platform_name === platform));
     setSelectedService(prev => (prev && prev.platform_name === platform ? prev : null));
     setPriceInfo(null);
+    setLink("");
   }, [platform, allServices]);
 
   // Fiyat hesapla
@@ -151,7 +194,7 @@ export default function NewOrderPage() {
     if (!selectedService) return;
     setError(""); setSuccess(""); setSubmitting(true);
     try {
-      await ordersApi.create(selectedService.id, link, quantity);
+      await ordersApi.create(selectedService.id, normalizeLink(platform, link, selectedService.service_name), quantity);
       setSuccess("✅ Sipariş başarıyla verildi! Siparişlerim ekranından takip edebilirsin.");
       setLink(""); setQuantity(0); setPriceInfo(null);
     } catch (err: any) {
@@ -254,11 +297,39 @@ export default function NewOrderPage() {
 
           {/* Link */}
           <div>
-            <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">Hedef Link</label>
-            <input type="url" placeholder={LINK_PLACEHOLDER[platform] || "https://..."}
-              value={link} onChange={e => setLink(e.target.value)} required
-              className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-violet-500 transition"
-            />
+            {(() => {
+              const isContent = isContentService(selectedService?.service_name || "");
+              const placeholder = isContent
+                ? (CONTENT_PLACEHOLDER[platform] || "https://...")
+                : (PROFILE_PLACEHOLDER[platform] || "@kullanici veya https://...");
+              const label = isContent ? "Gönderi / Video Linki" : "Kullanıcı Adı veya Link";
+              const resolved = normalizeLink(platform, link, selectedService?.service_name);
+              return (
+                <>
+                  <label className="text-xs text-white/40 uppercase tracking-widest mb-2 block">
+                    {label}
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={placeholder}
+                    value={link}
+                    onChange={e => setLink(e.target.value)}
+                    required
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-violet-500 transition"
+                  />
+                  {isContent && (
+                    <p className="text-[11px] text-amber-400/70 mt-1.5">
+                      ⚠️ Bu servis için beğeni/izlenme gönderilecek gönderi veya video linkini girin.
+                    </p>
+                  )}
+                  {!isContent && link.trim() && !link.trim().startsWith("http") && (
+                    <p className="text-[11px] text-white/30 mt-1.5">
+                      Gönderilecek: <span className="text-violet-400/80">{resolved}</span>
+                    </p>
+                  )}
+                </>
+              );
+            })()}
           </div>
 
           {/* Adet + hızlı seçim */}

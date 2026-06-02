@@ -129,6 +129,22 @@ async def list_featured_packages(response: Response):
 
 
 # --- 1. MÜŞTERİNİN GÖRECEĞİ AKTİF SERVİSLERİ LİSTELEME ---
+
+# Gösterilecek servisler — JAP service ID listesi.
+# Buraya eklenen ID'ler sipariş formunda görünür, diğerleri gizlenir.
+ALLOWED_JAP_SERVICE_IDS = [
+    47,     # Instagram Türk Takipçi
+    8216,   # Instagram Beğeni
+    10216,  # Instagram Global Takipçi
+    3519,   # YouTube Abone [TR]
+    7533,   # YouTube İzlenme
+    10055,  # TikTok Takipçi
+    10023,  # TikTok Beğeni
+    10019,  # TikTok İzlenme
+    8695,   # X (Twitter) Takipçi
+    9393,   # X (Twitter) Beğeni
+]
+
 @router.get("/list")
 async def list_services(response: Response, _user: dict = Depends(get_current_user)):
     """
@@ -147,29 +163,21 @@ async def list_services(response: Response, _user: dict = Depends(get_current_us
         .order("display_order")
         .execute()
     )
-    # Tüm aktif servisleri sayfalayarak çek (Supabase tek sorguda 1000 ile sınırlı)
-    services_data = []
-    page_size = 1000
-    offset = 0
-    while True:
-        batch = (
-            supabase.table("services")
-            .select("*, categories(platform_name, category_name)")
-            .eq("is_active", True)
-            .range(offset, offset + page_size - 1)
-            .execute()
-        ).data or []
-        services_data.extend(batch)
-        if len(batch) < page_size:
-            break
-        offset += page_size
+    # Sadece izin verilen JAP ID'lerini çek — sayfalamaya gerek kalmaz
+    batch = (
+        supabase.table("services")
+        .select("*, categories(platform_name, category_name)")
+        .eq("is_active", True)
+        .in_("jap_service_id", ALLOWED_JAP_SERVICE_IDS)
+        .execute()
+    ).data or []
 
     if not categories.data:
         return {"categories": [], "services": []}
 
     # Flatten: category join alanlarını servis root'una taşı
     services_flat = []
-    for svc in services_data:
+    for svc in batch:
         cat = svc.pop("categories", {}) or {}
         svc["platform_name"] = cat.get("platform_name", "")
         svc["category_name"] = cat.get("category_name", "")

@@ -12,13 +12,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// 401 → login'e yönlendir
+// 401 → login'e yönlendir; ağ hatası (cold start) → 1 kez retry
 api.interceptors.response.use(
   (res) => res,
-  (err) => {
+  async (err) => {
     if (err.response?.status === 401 && typeof window !== "undefined") {
       Cookies.remove("hypeup_token");
       window.location.href = "/login";
+      return Promise.reject(err);
+    }
+    // Render cold start: yanıt yok (CORS/network hatası) → 2sn bekle, 1 kez tekrar dene
+    if (!err.response && !err.config?._retry) {
+      err.config._retry = true;
+      await new Promise((r) => setTimeout(r, 2000));
+      return api(err.config);
     }
     return Promise.reject(err);
   }
