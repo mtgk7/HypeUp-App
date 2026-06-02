@@ -183,10 +183,48 @@ export default function LandingPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-[#09080f] text-white">
+    <div className="min-h-screen text-white relative overflow-x-hidden" style={{ background: "#07060f" }}>
+
+      {/* ── ARKA PLAN DEKORASYON ── */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        {/* Büyük mor orb — sağ üst */}
+        <div style={{
+          position: "absolute", top: "-12%", right: "-8%",
+          width: "700px", height: "700px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(139,92,246,0.35) 0%, rgba(109,40,217,0.15) 40%, transparent 70%)",
+          filter: "blur(40px)",
+        }} />
+        {/* İndigo orb — sol alt */}
+        <div style={{
+          position: "absolute", bottom: "5%", left: "-10%",
+          width: "600px", height: "600px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(99,102,241,0.30) 0%, rgba(67,56,202,0.12) 45%, transparent 70%)",
+          filter: "blur(50px)",
+        }} />
+        {/* Pembe/magenta orb — sol üst */}
+        <div style={{
+          position: "absolute", top: "15%", left: "5%",
+          width: "350px", height: "350px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(217,70,239,0.18) 0%, transparent 65%)",
+          filter: "blur(35px)",
+        }} />
+        {/* Mavi/teal orb — sağ orta */}
+        <div style={{
+          position: "absolute", top: "45%", right: "5%",
+          width: "300px", height: "300px", borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 65%)",
+          filter: "blur(30px)",
+        }} />
+        {/* İnce yatay grid */}
+        <div style={{
+          position: "absolute", inset: 0,
+          backgroundImage: "linear-gradient(rgba(139,92,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(139,92,246,0.04) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }} />
+      </div>
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 bg-[#09080f]/90 backdrop-blur-md border-b border-white/[0.06]">
+      <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-white/[0.08]" style={{ background: "rgba(7,6,15,0.85)" }}>
         <div className="max-w-6xl mx-auto px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-600/30">
@@ -243,7 +281,7 @@ export default function LandingPage() {
 
           {/* Sağ — güven kartı */}
           <div className="lg:flex-shrink-0 w-full lg:w-[340px]">
-            <div className="bg-[#0f0d1c] border border-white/[0.08] rounded-2xl p-6">
+            <div className="bg-white/[0.04] backdrop-blur-sm border border-violet-500/20 rounded-2xl p-6">
               <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 mb-5 text-xs text-emerald-300 font-medium">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> 100 TL yükle, 25 TL kazan — 200 TL yükle, 75 TL kazan
               </div>
@@ -296,7 +334,7 @@ export default function LandingPage() {
       </section>
 
       {/* RAKAMLAR — horizontal strip */}
-      <section className="border-y border-white/[0.06] bg-[#0d0b1a]">
+      <section className="border-y border-white/[0.08] bg-white/[0.02]">
         <div className="max-w-6xl mx-auto px-5 py-6 grid grid-cols-2 sm:grid-cols-4 divide-x divide-white/[0.06]">
           {FACTS.map(({ value, label }) => (
             <div key={label} className="px-6 first:pl-0 last:pr-0 flex flex-col gap-1 py-2">
@@ -444,7 +482,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/[0.06] bg-[#07060d] pt-12 pb-24 sm:pb-12">
+      <footer className="border-t border-white/[0.08] bg-white/[0.01] pt-12 pb-24 sm:pb-12">
         <div className="max-w-6xl mx-auto px-5">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-10">
             <div className="col-span-2 sm:col-span-1">
@@ -479,7 +517,7 @@ export default function LandingPage() {
       </footer>
 
       {/* MOBİL ALT NAV */}
-      <div className="fixed bottom-0 inset-x-0 sm:hidden z-50 bg-[#09080f]/95 backdrop-blur border-t border-white/[0.08]">
+      <div className="fixed bottom-0 inset-x-0 sm:hidden z-50 backdrop-blur-md border-t border-white/[0.08]" style={{ background: "rgba(7,6,15,0.95)" }}>
         <div className="grid grid-cols-5 h-16">
           {[
             { icon: Home,         label: "Ana Sayfa", href: "/" },

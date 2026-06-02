@@ -43,8 +43,11 @@ select option {
 .bg-\[\#111\]   { background-color: #0e0c1c !important; }
 .bg-\[\#0f0f0f\]{ background-color: #080612 !important; }
 .bg-\[\#151515\]{ background-color: #110e22 !important; }
-.bg-\[\#0f0d1c\]{ background-color: #0e0c1c !important; }
+.bg-\[\#0f0d1c\]{ background-color: rgba(20,16,40,0.70) !important; backdrop-filter: blur(8px); }
 .bg-\[\#09080f\]{ background-color: #080612 !important; }
+
+/* Landing içerik z-index */
+section, footer, nav { position: relative; z-index: 1; }
 
 /* Panel arka plan ambient glow'ları */
 .panel-bg {
