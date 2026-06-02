@@ -57,23 +57,23 @@ function RegisterForm() {
         <div className={`border rounded-xl p-4 mb-6 flex items-center gap-3 ${
           isReferred
             ? "bg-gradient-to-r from-green-600/20 to-emerald-600/20 border-green-500/30"
-            : "bg-gradient-to-r from-violet-600/20 to-purple-600/20 border-violet-500/30"
+            : "bg-gradient-to-r from-amber-600/15 to-orange-600/15 border-amber-500/30"
         }`}>
-          {isReferred ? <Users className="w-6 h-6 text-green-400 shrink-0" /> : <Gift className="w-6 h-6 text-violet-400 shrink-0" />}
+          {isReferred ? <Users className="w-6 h-6 text-green-400 shrink-0" /> : <Gift className="w-6 h-6 text-amber-400 shrink-0" />}
           <div>
             {isReferred ? (
               <>
                 <p className="text-sm font-semibold text-green-300">Referans Bonusu Aktif!</p>
                 <p className="text-xs text-white/60">
-                  <span className="text-green-400 font-bold">50 TL</span> hoş geldin +{" "}
-                  <span className="text-green-400 font-bold">25 TL</span> referans = toplam{" "}
-                  <span className="text-green-400 font-bold">75 TL</span> 🎉
+                  Kayıt olunca <span className="text-green-400 font-bold">25 TL</span> referans bonusu hesabına eklenir 🎉
                 </p>
               </>
             ) : (
               <>
-                <p className="text-sm font-semibold text-violet-300">Hoş Geldin Bonusu!</p>
-                <p className="text-xs text-white/60">Kayıt olana <span className="text-green-400 font-bold">50 TL</span> ücretsiz deneme bakiyesi 🎉</p>
+                <p className="text-sm font-semibold text-amber-300">Yükleme Bonusu Kazan!</p>
+                <p className="text-xs text-white/60">
+                  100 TL yükle <span className="text-amber-400 font-bold">+25 TL</span> · 150 TL yükle <span className="text-amber-400 font-bold">+50 TL</span> · 200 TL yükle <span className="text-amber-400 font-bold">+75 TL</span>
+                </p>
               </>
             )}
           </div>
@@ -115,7 +115,7 @@ function RegisterForm() {
             <button type="submit" disabled={loading}
               className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-60 rounded-lg py-3 text-sm font-semibold transition flex items-center justify-center gap-2 glow-purple">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {loading ? "Kayıt yapılıyor..." : isReferred ? "Kayıt Ol ve 75 TL Kazan" : "Kayıt Ol ve 50 TL Kazan"}
+              {loading ? "Kayıt yapılıyor..." : isReferred ? "Kayıt Ol ve 25 TL Kazan" : "Kayıt Ol"}
             </button>
           </form>
 

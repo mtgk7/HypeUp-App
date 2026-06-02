@@ -93,7 +93,7 @@ export default function LoginPage() {
           <p className="text-center text-sm text-white/40 mt-6">
             Hesabın yok mu?{" "}
             <Link href="/register" className="text-violet-400 hover:text-violet-300 font-medium">
-              Kayıt Ol — 50 TL Bonus
+              Kayıt Ol — Bonus Kazan
             </Link>
           </p>
         </div>
