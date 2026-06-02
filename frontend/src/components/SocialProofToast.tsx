@@ -64,6 +64,27 @@ const NOTIFICATIONS = [
   { city: "Niğde",       platform: "X",         service: "Takipçi",          qty: "1.000",   emoji: "✖️" },
   { city: "Kırşehir",    platform: "TikTok",    service: "Beğeni",           qty: "2.000",   emoji: "🎵" },
   { city: "Mardin",      platform: "Instagram", service: "Türk Takipçi",     qty: "1.500",   emoji: "📸" },
+  // Yurtdışı
+  { city: "Berlin",      platform: "Instagram", service: "Global Takipçi",   qty: "2.500",   emoji: "📸", foreign: true },
+  { city: "Amsterdam",   platform: "YouTube",   service: "Abone",            qty: "500",     emoji: "▶️", foreign: true },
+  { city: "Dubai",       platform: "Instagram", service: "Beğeni",           qty: "5.000",   emoji: "📸", foreign: true },
+  { city: "Londra",      platform: "TikTok",    service: "Takipçi",          qty: "1.000",   emoji: "🎵", foreign: true },
+  { city: "Paris",       platform: "Instagram", service: "Global Takipçi",   qty: "1.000",   emoji: "📸", foreign: true },
+  { city: "New York",    platform: "X",         service: "Takipçi",          qty: "2.500",   emoji: "✖️", foreign: true },
+  { city: "Stockholm",   platform: "YouTube",   service: "İzlenme",          qty: "20.000",  emoji: "▶️", foreign: true },
+  { city: "Viyana",      platform: "TikTok",    service: "İzlenme",          qty: "50.000",  emoji: "🎵", foreign: true },
+  { city: "Toronto",     platform: "Instagram", service: "Beğeni",           qty: "3.000",   emoji: "📸", foreign: true },
+  { city: "Melbourne",   platform: "YouTube",   service: "Abone",            qty: "250",     emoji: "▶️", foreign: true },
+  { city: "Köln",        platform: "TikTok",    service: "Takipçi",          qty: "750",     emoji: "🎵", foreign: true },
+  { city: "Münih",       platform: "Instagram", service: "Global Takipçi",   qty: "500",     emoji: "📸", foreign: true },
+  { city: "Brüksel",     platform: "X",         service: "Beğeni",           qty: "1.000",   emoji: "✖️", foreign: true },
+  { city: "Zürich",      platform: "Instagram", service: "Türk Takipçi",     qty: "1.000",   emoji: "📸", foreign: true },
+  { city: "Roma",        platform: "TikTok",    service: "Beğeni",           qty: "2.000",   emoji: "🎵", foreign: true },
+  { city: "Madrid",      platform: "YouTube",   service: "İzlenme",          qty: "10.000",  emoji: "▶️", foreign: true },
+  { city: "Atina",       platform: "Instagram", service: "Beğeni",           qty: "750",     emoji: "📸", foreign: true },
+  { city: "Sofya",       platform: "TikTok",    service: "İzlenme",          qty: "15.000",  emoji: "🎵", foreign: true },
+  { city: "Riyad",       platform: "Instagram", service: "Global Takipçi",   qty: "2.000",   emoji: "📸", foreign: true },
+  { city: "Stockholm",   platform: "X",         service: "Takipçi",          qty: "500",     emoji: "✖️", foreign: true },
 ];
 
 const TIMES = ["az önce", "1 dk önce", "2 dk önce", "3 dk önce"];
@@ -96,8 +117,9 @@ export default function SocialProofToast() {
     };
   }, [visible, index]);
 
-  const n = NOTIFICATIONS[index];
-  const time = TIMES[Math.floor(index / 8) % TIMES.length];
+  const n = NOTIFICATIONS[index] as typeof NOTIFICATIONS[0] & { foreign?: boolean };
+  const time = TIMES[Math.floor(index / 10) % TIMES.length];
+  const suffix = (n as { foreign?: boolean }).foreign ? "dan" : "dan biri";
 
   return (
     <div
@@ -111,13 +133,16 @@ export default function SocialProofToast() {
         </div>
         <div className="min-w-0">
           <p className="text-white text-xs font-semibold leading-snug">
-            {n.city}&apos;dan biri{" "}
+            {n.city}&apos;{suffix}{" "}
             <span className="text-violet-300">
               {n.qty} {n.platform} {n.service}
             </span>{" "}
             satın aldı
           </p>
-          <p className="text-white/30 text-[10px] mt-0.5">{time}</p>
+          <p className="text-white/30 text-[10px] mt-0.5 flex items-center gap-1">
+            {(n as { foreign?: boolean }).foreign && <span className="text-amber-400/70">🌍</span>}
+            {time}
+          </p>
         </div>
         <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shrink-0 ml-1" />
       </div>
