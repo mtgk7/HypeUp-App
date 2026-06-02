@@ -51,7 +51,7 @@ export default function Sidebar({ role = "user", balance = 0, email = "" }: Side
   const links = role === "admin" ? adminLinks : userLinks;
 
   const sidebarContent = (
-    <aside className="w-64 h-full bg-[#111] border-r border-white/10 flex flex-col p-4 overflow-y-auto">
+    <aside className="w-64 h-full sidebar-bg flex flex-col p-4 overflow-y-auto">
       {/* Logo — tıklayınca ana panele döner */}
       <Link href={role === "admin" ? "/admin" : "/dashboard"} className="flex items-center gap-2 mb-8 px-2 group">
         <div className="w-8 h-8 bg-violet-600 rounded-lg flex items-center justify-center group-hover:bg-violet-500 transition">

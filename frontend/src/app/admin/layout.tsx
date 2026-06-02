@@ -17,7 +17,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [router]);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen panel-bg">
       <Sidebar role="admin" />
       <main className="flex-1 p-4 pt-16 lg:p-8 lg:pt-8 overflow-auto min-w-0">
         {children}
