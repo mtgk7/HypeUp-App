@@ -18,6 +18,24 @@ router = APIRouter(
 PRM4U_URL = os.getenv("PRM4U_API_URL", "https://prm4u.com/api/v2")
 PRM4U_KEY = os.getenv("PRM4U_API_KEY", "")
 
+# Kullanıcıya gösterilecek temiz servis isimleri (jap_service_id → görünen isim)
+SERVICE_NAME_OVERRIDES: dict[int, str] = {
+    # Instagram
+    4908: "Instagram Türk Takipçi",
+    4626: "Instagram Yabancı Takipçi",
+    3:    "Instagram Beğeni",
+    # TikTok
+    4686: "TikTok Takipçi",
+    162:  "TikTok Beğeni",
+    167:  "TikTok İzlenme",
+    # YouTube
+    3110: "YouTube Abone",
+    4048: "YouTube İzlenme",
+    # X (Twitter)
+    4259: "X Takipçi",
+    145:  "X Beğeni",
+}
+
 
 # --- 0. PUBLIC — Auth gerektirmez, landing page için ---
 @router.get("/public")
@@ -42,9 +60,10 @@ async def list_public_services(response: Response):
         else:
             jd = svc.get("jap_dolar_price")
             display_price = hesapla_hypeup_satis_fiyati(float(jd), rate) if jd else float(svc["hypeup_tl_price"])
+        jid = int(svc["jap_service_id"])
         services.append({
             "id":              svc["id"],
-            "service_name":    svc["service_name"],
+            "service_name":    SERVICE_NAME_OVERRIDES.get(jid, svc["service_name"]),
             "hypeup_tl_price": float(display_price),
             "min_order":       svc["min_order"],
             "max_order":       svc["max_order"],
@@ -183,6 +202,9 @@ async def list_services(response: Response, _user: dict = Depends(get_current_us
             jd = svc.get("jap_dolar_price")
             if jd:
                 svc["hypeup_tl_price"] = hesapla_hypeup_satis_fiyati(float(jd), rate)
+        jid = int(svc.get("jap_service_id", 0))
+        if jid in SERVICE_NAME_OVERRIDES:
+            svc["service_name"] = SERVICE_NAME_OVERRIDES[jid]
         services_flat.append(svc)
 
     return {
