@@ -130,9 +130,11 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
         buttons=[[{"text": "💸 İade Et", "callback_data": f"refund_order_{order['id']}"}]],
     )
 
+    jid = int(svc.get("jap_service_id") or 0)
+    display_name = SERVICE_NAME_OVERRIDES.get(jid, svc.get("service_name") or "")
     return OrderOut(
         **order,
-        service_name=svc.get("service_name"),
+        service_name=display_name,
         platform_name=cat.get("platform_name"),
     )
 
@@ -143,7 +145,7 @@ async def list_my_orders(user: dict = Depends(get_current_user)):
     db = get_supabase()
     result = (
         db.table("orders")
-        .select("*, services(service_name, categories(platform_name))")
+        .select("*, services(service_name, jap_service_id, categories(platform_name))")
         .eq("user_id", user["id"])
         .order("created_at", desc=True)
         .execute()
@@ -169,7 +171,7 @@ async def get_order(order_id: str, user: dict = Depends(get_current_user)):
     db = get_supabase()
     result = (
         db.table("orders")
-        .select("*, services(service_name, categories(platform_name))")
+        .select("*, services(service_name, jap_service_id, categories(platform_name))")
         .eq("id", order_id)
         .eq("user_id", user["id"])
         .limit(1)
@@ -181,4 +183,6 @@ async def get_order(order_id: str, user: dict = Depends(get_current_user)):
     row = result.data[0]
     svc = row.pop("services", {}) or {}
     cat = svc.get("categories") or {}
-    return OrderOut(**row, service_name=svc.get("service_name"), platform_name=cat.get("platform_name"))
+    jid = int(svc.get("jap_service_id") or 0)
+    display_name = SERVICE_NAME_OVERRIDES.get(jid, svc.get("service_name") or "")
+    return OrderOut(**row, service_name=display_name, platform_name=cat.get("platform_name"))
