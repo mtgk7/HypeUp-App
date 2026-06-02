@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { servicesApi } from "@/lib/api";
+import SocialProofToast from "@/components/SocialProofToast";
 import {
   Zap, ChevronDown, ChevronRight, ArrowRight,
   Home, Search, ShoppingCart, Headphones, LogIn,
@@ -503,6 +504,8 @@ export default function LandingPage() {
           )}
         </div>
       </div>
+
+      <SocialProofToast />
     </div>
   );
 }

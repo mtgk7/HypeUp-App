@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import Sidebar from "@/components/Sidebar";
+import SocialProofToast from "@/components/SocialProofToast";
 import { usersApi } from "@/lib/api";
 
 interface UserProfile {
@@ -37,6 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 p-4 pt-16 lg:p-8 lg:pt-8 overflow-auto min-w-0">
         {children}
       </main>
+      <SocialProofToast />
     </div>
   );
 }
