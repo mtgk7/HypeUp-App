@@ -91,30 +91,31 @@ const TIMES = ["az önce", "1 dk önce", "2 dk önce", "3 dk önce"];
 export default function SocialProofToast() {
   const [index, setIndex] = useState(0);
   const [visible, setVisible] = useState(false);
+  const [started, setStarted] = useState(false);
 
+  // İlk bildirim 3 saniye sonra başlasın
   useEffect(() => {
-    // İlk bildirim 3 saniye sonra çıksın
-    const initial = setTimeout(() => setVisible(true), 3000);
-    return () => clearTimeout(initial);
+    const t = setTimeout(() => setStarted(true), 3000);
+    return () => clearTimeout(t);
   }, []);
 
+  // Her yeni index veya started değişince döngüyü çalıştır
   useEffect(() => {
-    if (!visible) return;
+    if (!started) return;
+    setVisible(true);
 
-    // 6 saniye görünür kal, sonra kaybol
+    // 6 saniye sonra gizle
     const hideTimer = setTimeout(() => setVisible(false), 6000);
-
-    // 4 saniye sonra (kaybolunca) sonraki index'e geç ve tekrar göster
+    // 10 saniye sonra sonraki mesaja geç
     const nextTimer = setTimeout(() => {
       setIndex(prev => (prev + 1) % NOTIFICATIONS.length);
-      setVisible(true);
     }, 10000);
 
     return () => {
       clearTimeout(hideTimer);
       clearTimeout(nextTimer);
     };
-  }, [visible, index]);
+  }, [started, index]);
 
   const n = NOTIFICATIONS[index] as typeof NOTIFICATIONS[0] & { foreign?: boolean };
   const time = TIMES[Math.floor(index / 10) % TIMES.length];
