@@ -28,7 +28,7 @@ RATE_BASELINE = 47.5
 # ──────────────────────────────────────────────────────────────
 SERVICE_TIERS: dict[int, List[dict]] = {
 
-    47: [  # IG Türk Takipçi (TakipciBudur x0.90)
+    4908: [  # IG Türk Takipçi → PRM4U: Instagram Takipçileri [Yenileme 15G] (eski: 47)
         {"min": 25,    "max": 49,    "price_per_1000": 2520.0},
         {"min": 50,    "max": 74,    "price_per_1000": 2520.0},
         {"min": 75,    "max": 99,    "price_per_1000": 2160.0},
@@ -50,7 +50,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 50000, "max": 100000,"price_per_1000":  765.0},
     ],
 
-    8216: [  # IG Beğeni (TakipciBudur Türk Beğeni x0.90)
+    3: [  # IG Beğeni → PRM4U: Instagram Likes [High Quality | No Drop] (eski: 8216)
         {"min": 25,    "max": 49,    "price_per_1000":  720.0},
         {"min": 50,    "max": 99,    "price_per_1000":  630.0},
         {"min": 100,   "max": 249,   "price_per_1000":  585.0},
@@ -82,7 +82,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 1000000,"max": 5000000,"price_per_1000":   1.8},
     ],
 
-    3519: [  # YouTube Abone (SosyalGram x0.90)
+    3110: [  # YouTube Abone → PRM4U: YouTube Aboneleri [İngilizce] (eski: 3519)
         {"min": 50,    "max": 99,    "price_per_1000": 1467.0},
         {"min": 100,   "max": 249,   "price_per_1000": 1422.0},
         {"min": 250,   "max": 499,   "price_per_1000": 1397.0},
@@ -99,7 +99,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 100000,"max": 500000,"price_per_1000": 1009.3},
     ],
 
-    7533: [  # YouTube İzlenme (Bayigram x0.90)
+    4048: [  # YouTube İzlenme → PRM4U: YouTube Views [Worldwide] (eski: 7533)
         {"min": 100,   "max": 249,   "price_per_1000":  81.0},
         {"min": 250,   "max": 499,   "price_per_1000":  79.2},
         {"min": 500,   "max": 749,   "price_per_1000":  77.5},
@@ -115,7 +115,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 100000,"max": 300000,"price_per_1000":  60.2},
     ],
 
-    8695: [  # X (Twitter) Takipci (Takipci.al x0.90)
+    4259: [  # X Takipçi → PRM4U: Twitter Takipçileri [10 Ülke] (eski: 8695)
         {"min": 100,  "max": 249,   "price_per_1000":  792.0},
         {"min": 250,  "max": 499,   "price_per_1000":  651.6},
         {"min": 500,  "max": 749,   "price_per_1000":  646.2},
@@ -128,7 +128,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 25000,"max": 50000, "price_per_1000":  555.3},
     ],
 
-    9393: [  # X (Twitter) Beğeni (Takipci.al x0.90)
+    145: [  # X Beğeni → PRM4U: Twitter Beğenileri [5 Ülke] (eski: 9393)
         {"min": 100,  "max": 249,  "price_per_1000":  477.0},
         {"min": 250,  "max": 499,  "price_per_1000":  486.0},
         {"min": 500,  "max": 749,  "price_per_1000":  475.2},
@@ -138,7 +138,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 5000, "max": 10000,"price_per_1000":  455.4},
     ],
 
-    10055: [  # TikTok Takipçi (Bayigram/SosyalGram x0.90)
+    4686: [  # TikTok Takipçi → PRM4U: TikTok Followers [High Quality] (eski: 10055)
         {"min": 50,    "max": 99,    "price_per_1000":  414.0},
         {"min": 100,   "max": 249,   "price_per_1000":  382.5},
         {"min": 250,   "max": 499,   "price_per_1000":  356.4},
@@ -153,7 +153,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 100000,"max": 100000,"price_per_1000":  166.5},
     ],
 
-    10023: [  # TikTok Beğeni (Bayigram x0.90)
+    162: [  # TikTok Beğeni → PRM4U: TikTok Likes [Photos/Video] (eski: 10023)
         {"min": 100,   "max": 249,   "price_per_1000":   81.0},
         {"min": 250,   "max": 499,   "price_per_1000":   79.2},
         {"min": 500,   "max": 749,   "price_per_1000":   76.5},
@@ -168,7 +168,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 100000,"max": 5000000,"price_per_1000":  31.5},
     ],
 
-    10019: [  # TikTok Video İzlenme (Bayigram x0.90)
+    167: [  # TikTok İzlenme → PRM4U: TikTok Views [100M/D No Drop] (eski: 10019)
         {"min": 1000,   "max": 2499,   "price_per_1000":   5.85},
         {"min": 2500,   "max": 4999,   "price_per_1000":   5.62},
         {"min": 5000,   "max": 7499,   "price_per_1000":   5.39},
@@ -183,7 +183,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 1000000,"max": 10000000,"price_per_1000":  3.12},
     ],
 
-    10216: [  # IG Global Takipçi (TakipciBudur Ucuz Yabancı x0.90)
+    4626: [  # IG Global Takipçi → PRM4U: Instagram Takipçileri [Yenileme 30G] (eski: 10216)
         {"min": 100,  "max": 499,  "price_per_1000":  765.0},
         {"min": 500,  "max": 749,  "price_per_1000":  630.0},
         {"min": 750,  "max": 999,  "price_per_1000":  570.0},
@@ -244,14 +244,14 @@ _QTY_STD = [100, 250, 500, 750, 1000]          # takipçi / beğeni / abone
 _QTY_VIEW = [1000, 5000, 10000, 25000, 50000]  # izlenme
 
 FEATURED_PACKAGES: List[dict] = [
-    {"jap_service_id": 47,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",  "emoji": "📸", "platform": "Instagram"},
-    {"jap_service_id": 8216,  "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",         "emoji": "❤️", "platform": "Instagram"},
-    {"jap_service_id": 10055, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",           "emoji": "🎵", "platform": "TikTok"},
-    {"jap_service_id": 10019, "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",           "emoji": "👁️", "platform": "TikTok"},
-    {"jap_service_id": 3519,  "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",            "emoji": "▶️", "platform": "YouTube"},
-    {"jap_service_id": 7533,  "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",          "emoji": "🎬", "platform": "YouTube"},
-    {"jap_service_id": 8695,  "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                "emoji": "✖️", "platform": "X"},
-    {"jap_service_id": 10216, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
+    {"jap_service_id": 4908, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",  "emoji": "📸", "platform": "Instagram"},
+    {"jap_service_id": 3,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",         "emoji": "❤️", "platform": "Instagram"},
+    {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",           "emoji": "🎵", "platform": "TikTok"},
+    {"jap_service_id": 167,  "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",           "emoji": "👁️", "platform": "TikTok"},
+    {"jap_service_id": 3110, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",            "emoji": "▶️", "platform": "YouTube"},
+    {"jap_service_id": 4048, "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",          "emoji": "🎬", "platform": "YouTube"},
+    {"jap_service_id": 4259, "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                "emoji": "✖️", "platform": "X"},
+    {"jap_service_id": 4626, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
 ]
 
 MIN_PRICE_TL = 5.0  # 1000 adet için minimum satış fiyatı (TL)

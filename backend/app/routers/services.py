@@ -133,16 +133,16 @@ async def list_featured_packages(response: Response):
 # Gösterilecek servisler — JAP service ID listesi.
 # Buraya eklenen ID'ler sipariş formunda görünür, diğerleri gizlenir.
 ALLOWED_JAP_SERVICE_IDS = [
-    47,     # Instagram Türk Takipçi
-    8216,   # Instagram Beğeni
-    10216,  # Instagram Global Takipçi
-    3519,   # YouTube Abone [TR]
-    7533,   # YouTube İzlenme
-    10055,  # TikTok Takipçi
-    10023,  # TikTok Beğeni
-    10019,  # TikTok İzlenme
-    8695,   # X (Twitter) Takipçi
-    9393,   # X (Twitter) Beğeni
+    4908,   # Instagram Türk Takipçi [Yenileme 15G]
+    3,      # Instagram Beğeni [High Quality | No Drop]
+    4626,   # Instagram Global Takipçi [Yenileme 30G]
+    3110,   # YouTube Abone [İngilizce Konuşanlar]
+    4048,   # YouTube İzlenme [Worldwide]
+    4686,   # TikTok Takipçi [High Quality]
+    162,    # TikTok Beğeni [Photos/Video]
+    167,    # TikTok İzlenme [100M/D No Drop]
+    4259,   # X (Twitter) Takipçi [10 Ülke Karışık]
+    145,    # X (Twitter) Beğeni [5 Ülke Karışık]
 ]
 
 @router.get("/list")

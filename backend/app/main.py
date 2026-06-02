@@ -223,6 +223,56 @@ async def send_daily_summary():
     await send_telegram(msg)
 
 
+async def check_prm4u_service_ids():
+    """
+    ALLOWED_JAP_SERVICE_IDS listesindeki servis ID'lerini PRM4U'da doğrula.
+    Geçersiz ID varsa Telegram'a uyarı gönder.
+    """
+    from app.services.telegram_service import send_telegram
+    from app.routers.services import ALLOWED_JAP_SERVICE_IDS
+    s = get_settings()
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            r = await client.post(s.PRM4U_API_URL, data={"key": s.PRM4U_API_KEY, "action": "services"})
+            all_services = r.json()
+        valid_ids = {int(svc["service"]) for svc in all_services if "service" in svc}
+        invalid = [sid for sid in ALLOWED_JAP_SERVICE_IDS if sid not in valid_ids]
+        if invalid:
+            ids_str = ", ".join(str(i) for i in invalid)
+            await send_telegram(
+                f"⚠️ <b>PRM4U Servis ID Uyarısı</b>\n"
+                f"Şu ID'ler artık PRM4U'da bulunamıyor:\n"
+                f"<code>{ids_str}</code>\n\n"
+                f"Siparişler bu servislerde başarısız olur. "
+                f"pricing_service.py ve services.py güncellenmeli!"
+            )
+            logger.warning(f"[PRM4U-IDCheck] Geçersiz servis ID'leri: {invalid}")
+        else:
+            logger.info(f"[PRM4U-IDCheck] Tüm {len(ALLOWED_JAP_SERVICE_IDS)} servis ID geçerli.")
+    except Exception as e:
+        logger.error(f"[PRM4U-IDCheck] Hata: {e}")
+
+
+async def prm4u_id_check_loop():
+    """Her gün TR saatiyle 10:00'da PRM4U servis ID kontrolü yap."""
+    from datetime import datetime, timedelta
+    try:
+        from zoneinfo import ZoneInfo
+        tz = ZoneInfo("Europe/Istanbul")
+    except Exception:
+        tz = None
+    while True:
+        now = datetime.now(tz) if tz else datetime.now()
+        target = now.replace(hour=10, minute=0, second=0, microsecond=0)
+        if target <= now:
+            target += timedelta(days=1)
+        await asyncio.sleep((target - now).total_seconds())
+        try:
+            await check_prm4u_service_ids()
+        except Exception as e:
+            logger.error(f"[PRM4U-IDCheck] Döngü hatası: {e}")
+
+
 async def daily_summary_loop():
     """Her gün TR saatiyle 21:00'de günlük özet gönder."""
     from datetime import datetime, timedelta
@@ -283,12 +333,14 @@ async def lifespan(app: FastAPI):
     task1 = asyncio.create_task(order_sync_loop())
     task2 = asyncio.create_task(twice_daily_sync_loop())
     task3 = asyncio.create_task(daily_summary_loop())
+    task4 = asyncio.create_task(prm4u_id_check_loop())
 
     yield
 
     task1.cancel()
     task2.cancel()
     task3.cancel()
+    task4.cancel()
 
 
 # ──────────────────────────────────────────────
