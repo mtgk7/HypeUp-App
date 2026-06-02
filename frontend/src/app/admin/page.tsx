@@ -23,7 +23,7 @@ function MiniBarChart({ data, metric }: { data: ChartDay[]; metric: ChartMetric 
         const h = Math.round((d[metric] / max) * 100);
         return (
           <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group relative">
-            <div className={`w-full rounded-sm ${colors[metric]} opacity-70 group-hover:opacity-100 transition`} style={{ height: `${Math.max(h, 2)}%` }} />
+            <div className={`w-full rounded-sm ${colors[metric]} opacity-70 group-hover:opacity-100 transition`} style={{ height: h > 0 ? `${Math.max(h, 8)}%` : "2px" }} />
             <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#222] border border-white/10 rounded px-1.5 py-0.5 text-[10px] text-white whitespace-nowrap z-10">
               {metric === "orders" ? d[metric] : `₺${d[metric].toFixed(0)}`}
             </div>

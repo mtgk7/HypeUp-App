@@ -53,13 +53,21 @@ export default function AddBalancePage() {
     }
   }
 
+  const doneBonus = amount ? getBonus(amount) : 0;
+
   if (step === "done") {
     return (
       <div className="max-w-lg">
         <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-8 text-center">
           <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Talebiniz Alındı</h2>
-          <p className="text-white/40 text-sm mb-6">Ödemenizi onayladıktan sonra bakiyeniz yüklenecektir.</p>
+          <p className="text-white/40 text-sm mb-4">Ödemenizi onayladıktan sonra bakiyeniz yüklenecektir.</p>
+          {doneBonus > 0 && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
+              <span className="text-amber-300 text-sm flex items-center gap-1.5"><Gift className="w-4 h-4" /> Yükleme bonusu</span>
+              <span className="text-amber-300 font-bold">+₺{doneBonus.toFixed(2)} — Toplam ₺{((amount ?? 0) + doneBonus).toFixed(2)}</span>
+            </div>
+          )}
           <div className="bg-[#111] border border-white/8 rounded-xl p-4 text-left space-y-3 mb-6">
             <div className="flex items-center justify-between">
               <span className="text-white/40 text-xs">Papara No</span>
@@ -71,7 +79,7 @@ export default function AddBalancePage() {
               </div>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-white/40 text-xs">Miktar</span>
+              <span className="text-white/40 text-xs">Gönderilecek Miktar</span>
               <span className="font-bold text-white">₺{amount?.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -116,6 +124,12 @@ export default function AddBalancePage() {
             <span className="text-white/40 text-sm">Gönderilecek Miktar</span>
             <span className="font-bold text-white">₺{amount?.toFixed(2)}</span>
           </div>
+          {doneBonus > 0 && (
+            <div className="flex items-center justify-between py-2 border-b border-white/5">
+              <span className="text-amber-400/80 text-sm flex items-center gap-1"><Gift className="w-3.5 h-3.5" /> Onay sonrası bonus</span>
+              <span className="text-amber-400 font-bold">+₺{doneBonus.toFixed(2)} → Toplam ₺{((amount ?? 0) + doneBonus).toFixed(2)}</span>
+            </div>
+          )}
           <p className="text-xs text-white/30 pt-1">
             Transferi yaptıktan sonra aşağıdaki formu doldurun.
             Papara'da görünen adınızı girin — onay için kullanılır.

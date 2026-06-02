@@ -3,6 +3,7 @@ from app.models.schemas import OrderCreateRequest, OrderOut
 from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.services.jap_service import get_jap_client
+from app.routers.services import SERVICE_NAME_OVERRIDES
 from app.services.pricing_service import calculate_order_cost, get_tier_price, calculate_hypeup_price
 from app.services.currency_service import get_current_rate
 from app.services.telegram_service import send_telegram, send_telegram_with_buttons
@@ -152,9 +153,12 @@ async def list_my_orders(user: dict = Depends(get_current_user)):
     for row in result.data:
         svc = row.pop("services", {}) or {}
         cat = svc.get("categories") or {}
+        jid = int(svc.get("jap_service_id") or 0)
+        raw_name = svc.get("service_name") or ""
+        display_name = SERVICE_NAME_OVERRIDES.get(jid, raw_name)
         orders.append(OrderOut(
             **row,
-            service_name=svc.get("service_name"),
+            service_name=display_name,
             platform_name=cat.get("platform_name"),
         ))
     return orders

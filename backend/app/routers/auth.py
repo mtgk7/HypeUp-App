@@ -39,6 +39,7 @@ async def register(body: RegisterRequest):
         "password_hash": hash_password(body.password),
         "referral_code": new_ref_code,
         "referred_by": referrer_id,
+        "balance": 0,
     }).execute()
 
     user = new_user.data[0]
@@ -65,7 +66,7 @@ async def register(body: RegisterRequest):
     # Telegram bildirimi — yeni kayıt
     import asyncio
     ref_text = f"🔗 Referansla geldi" if referrer_id else "🆕 Direkt kayıt"
-    bonus_text = f" (+₺{s.REFERRAL_BONUS_TL:.0f} bonus)" if referrer_id else f" (+₺50 hoş geldin)"
+    bonus_text = f" (+₺{s.REFERRAL_BONUS_TL:.0f} referans bonusu)" if referrer_id else ""
     asyncio.create_task(send_telegram(
         f"👤 <b>Yeni Kullanıcı Kaydı</b>\n"
         f"📧 {body.email}\n"

@@ -329,7 +329,9 @@ export default function LandingPage() {
                 </div>
                 <div className="text-center">
                   <p className="text-[11px] font-semibold text-white/70 group-hover:text-white transition">{p}</p>
-                  <p className="text-[10px] text-white/25 mt-0.5">{platformCounts[p] ?? "..."}</p>
+                  <p className="text-[10px] text-white/25 mt-0.5">
+                    {loadingSvc ? "..." : (platformCounts[p] ?? 0) > 0 ? `${platformCounts[p]} hizmet` : "Yakında"}
+                  </p>
                 </div>
               </button>
             );

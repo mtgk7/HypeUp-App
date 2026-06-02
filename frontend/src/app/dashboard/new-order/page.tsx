@@ -226,6 +226,7 @@ export default function NewOrderPage() {
       await ordersApi.create(selectedService.id, normalizeLink(platform, link, selectedService.service_name), quantity);
       setSuccess("✅ Siparişin alındı ve işleme girdi! Takipçi ve beğeni gibi servisler genellikle birkaç dakika içinde başlar; yoğunluğa göre 1–24 saat sürebilir. Siparişlerim ekranından anlık durumunu takip edebilirsin.");
       setLink(""); setQuantity(0); setPriceInfo(null);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err: any) {
       setError(err.response?.data?.detail || "Sipariş verilemedi");
     } finally { setSubmitting(false); }

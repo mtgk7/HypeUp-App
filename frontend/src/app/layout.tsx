@@ -6,6 +6,11 @@ import Script from "next/script";
 export const metadata: Metadata = {
   title: "HypeUp — SMM Panel",
   description: "Sosyal medya büyümeni hızlandır",
+  icons: {
+    icon: [
+      { url: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237C3AED'/><path d='M10 22L16 10L22 22M13 18h6' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/></svg>", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
