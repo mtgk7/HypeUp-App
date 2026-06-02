@@ -224,7 +224,7 @@ export default function NewOrderPage() {
     setError(""); setSuccess(""); setSubmitting(true);
     try {
       await ordersApi.create(selectedService.id, normalizeLink(platform, link, selectedService.service_name), quantity);
-      setSuccess("✅ Sipariş başarıyla verildi! Siparişlerim ekranından takip edebilirsin.");
+      setSuccess("✅ Siparişin alındı ve işleme girdi! Takipçi ve beğeni gibi servisler genellikle birkaç dakika içinde başlar; yoğunluğa göre 1–24 saat sürebilir. Siparişlerim ekranından anlık durumunu takip edebilirsin.");
       setLink(""); setQuantity(0); setPriceInfo(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || "Sipariş verilemedi");
@@ -242,7 +242,10 @@ export default function NewOrderPage() {
       </div>
 
       {success && (
-        <div className="bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl p-4 mb-4 text-sm">{success}</div>
+        <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-4">
+          <p className="text-green-400 text-sm font-semibold mb-1">Sipariş Alındı ✅</p>
+          <p className="text-green-300/70 text-[13px] leading-relaxed">{success}</p>
+        </div>
       )}
       {error && (
         <div className="bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl p-4 mb-4 text-sm">{error}</div>
