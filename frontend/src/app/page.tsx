@@ -98,9 +98,17 @@ interface FeaturedPackage {
 function PackageCard({ pkg }: { pkg: FeaturedPackage }) {
   const [qty, setQty] = useState<number>(pkg.default_qty);
   const opt = pkg.options.find((o) => o.qty === qty) ?? pkg.options[0];
+  const meta = PLATFORM_META[pkg.platform];
+  const Icon = meta?.icon;
   return (
     <div className="group bg-[#0f0d1c] border border-white/[0.08] hover:border-violet-500/40 rounded-2xl p-4 transition-all flex flex-col">
-      <div className="text-2xl mb-2">{pkg.emoji}</div>
+      <div className="flex items-center gap-2 mb-2">
+        {Icon && (
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: meta.dimColor }}>
+            <Icon className="w-4 h-4" color={meta.color} />
+          </div>
+        )}
+      </div>
       <p className="text-sm font-semibold text-white/90 leading-tight mb-3">{pkg.label}</p>
 
       <div className="flex flex-wrap gap-1.5 mb-3">

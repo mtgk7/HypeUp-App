@@ -244,14 +244,18 @@ _QTY_STD = [100, 250, 500, 750, 1000]          # takipçi / beğeni / abone
 _QTY_VIEW = [1000, 5000, 10000, 25000, 50000]  # izlenme
 
 FEATURED_PACKAGES: List[dict] = [
+    # Instagram
     {"jap_service_id": 4908, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",  "emoji": "📸", "platform": "Instagram"},
+    {"jap_service_id": 4626, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
     {"jap_service_id": 3,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",         "emoji": "❤️", "platform": "Instagram"},
+    # TikTok
     {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",           "emoji": "🎵", "platform": "TikTok"},
     {"jap_service_id": 167,  "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",           "emoji": "👁️", "platform": "TikTok"},
+    # YouTube
     {"jap_service_id": 3110, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",            "emoji": "▶️", "platform": "YouTube"},
     {"jap_service_id": 4048, "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",          "emoji": "🎬", "platform": "YouTube"},
+    # X
     {"jap_service_id": 4259, "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                "emoji": "✖️", "platform": "X"},
-    {"jap_service_id": 4626, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
 ]
 
 MIN_PRICE_TL = 5.0  # 1000 adet için minimum satış fiyatı (TL)
