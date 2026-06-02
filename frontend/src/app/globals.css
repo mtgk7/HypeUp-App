@@ -48,13 +48,15 @@ select option {
 
 /* Panel arka plan ambient glow'ları */
 .panel-bg {
-  background: radial-gradient(ellipse 80% 60% at 80% 0%,   rgba(124,58,237,0.13) 0%, transparent 60%),
-              radial-gradient(ellipse 60% 50% at 10% 90%,  rgba(99,102,241,0.10) 0%, transparent 55%),
-              radial-gradient(ellipse 40% 40% at 50% 40%,  rgba(168,85,247,0.05) 0%, transparent 50%),
-              #080612;
+  background:
+    radial-gradient(ellipse 70% 50% at 90% 5%,    rgba(139,92,246,0.25) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 5%  90%,   rgba(99,102,241,0.20) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 55% 50%,   rgba(168,85,247,0.08) 0%, transparent 50%),
+    radial-gradient(ellipse 30% 25% at 30% 15%,   rgba(79,70,229,0.12)  0%, transparent 45%),
+    #07050f;
 }
 
 .sidebar-bg {
-  background: rgba(11, 9, 22, 0.98);
-  border-right: 1px solid rgba(139, 92, 246, 0.12);
+  background: linear-gradient(180deg, #0e0b1f 0%, #0a0818 100%);
+  border-right: 1px solid rgba(139, 92, 246, 0.20);
 }
