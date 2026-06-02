@@ -50,6 +50,15 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 50000, "max": 100000,"price_per_1000":  765.0},
     ],
 
+    1549: [  # IG Türk Beğeni → PRM4U: Instagram Beğenileri [Gerçek Kullanıcı: Türkiye]
+        {"min": 1,    "max": 99,    "price_per_1000":  720.0},
+        {"min": 100,  "max": 249,   "price_per_1000":  585.0},
+        {"min": 250,  "max": 499,   "price_per_1000":  450.0},
+        {"min": 500,  "max": 999,   "price_per_1000":  360.0},
+        {"min": 1000, "max": 2499,  "price_per_1000":  315.0},
+        {"min": 2500, "max": 5000,  "price_per_1000":  270.0},
+    ],
+
     3: [  # IG Beğeni → PRM4U: Instagram Likes [High Quality | No Drop] (eski: 8216)
         {"min": 25,    "max": 49,    "price_per_1000":  720.0},
         {"min": 50,    "max": 99,    "price_per_1000":  630.0},

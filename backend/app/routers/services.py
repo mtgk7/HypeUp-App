@@ -23,7 +23,8 @@ SERVICE_NAME_OVERRIDES: dict[int, str] = {
     # Instagram
     4908: "Instagram Türk Takipçi",
     4626: "Instagram Yabancı Takipçi",
-    3:    "Instagram Beğeni",
+    3:    "Instagram Beğeni (Genel)",
+    1549: "Instagram Türk Beğeni",
     # TikTok
     4686: "TikTok Takipçi",
     162:  "TikTok Beğeni",
@@ -144,8 +145,9 @@ async def list_featured_packages(response: Response):
 # Buraya eklenen ID'ler sipariş formunda görünür, diğerleri gizlenir.
 ALLOWED_JAP_SERVICE_IDS = [
     4908,   # Instagram Türk Takipçi [Yenileme 15G]
-    3,      # Instagram Beğeni [High Quality | No Drop]
     4626,   # Instagram Global Takipçi [Yenileme 30G]
+    3,      # Instagram Beğeni (Genel)
+    1549,   # Instagram Türk Beğeni [Gerçek Kullanıcı: Türkiye]
     3110,   # YouTube Abone [İngilizce Konuşanlar]
     4048,   # YouTube İzlenme [Worldwide]
     4686,   # TikTok Takipçi [High Quality]
