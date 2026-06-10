@@ -87,8 +87,6 @@ export const notificationsApi = {
 // Payment
 // ──────────────────────────────────────────────
 export const paymentApi = {
-  initShopier: (amount: number) =>
-    api.post("/payment/shopier/init", { amount }),
   manual: (amount: number, sender_name: string) =>
     api.post("/payment/manual", { amount, sender_name }),
   history: () => api.get("/payment/history"),

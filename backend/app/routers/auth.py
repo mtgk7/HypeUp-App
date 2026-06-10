@@ -108,6 +108,7 @@ async def login(body: LoginRequest):
         user_id=user["id"],
         role=user["role"],
         balance=float(user["balance"]),
+        referral_code=user.get("referral_code"),
     )
 
 
@@ -147,4 +148,5 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         role=current_user["role"],
         is_active=current_user["is_active"],
         created_at=current_user["created_at"],
+        referral_code=current_user.get("referral_code"),
     )

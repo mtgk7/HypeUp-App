@@ -379,16 +379,24 @@ async def update_order_status(order_id: str, body: OrderStatusUpdate, _admin: di
 async def list_all_services(_admin: dict = Depends(require_admin)):
     db = get_supabase()
     rate = get_current_rate()
-    result = (
-        db.table("services")
-        .select("*, categories(platform_name, category_name)")
-        .order("service_name")
-        .execute()
-    )
+    all_rows, PAGE, offset = [], 1000, 0
+    while True:
+        batch = (
+            db.table("services")
+            .select("*, categories(platform_name, category_name)")
+            .order("service_name")
+            .range(offset, offset + PAGE - 1)
+            .execute()
+        )
+        if not batch.data:
+            break
+        all_rows.extend(batch.data)
+        if len(batch.data) < PAGE:
+            break
+        offset += PAGE
     services = []
-    for row in result.data:
+    for row in all_rows:
         cat = row.pop("categories", {}) or {}
-        # Fiyatı güncel kurdan CANLI hesapla — admin paneli de hiç eski kalmasın
         jd = row.get("jap_dolar_price")
         if jd:
             row["hypeup_tl_price"] = calculate_hypeup_price(float(jd), rate)
