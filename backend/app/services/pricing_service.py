@@ -29,7 +29,6 @@ RATE_BASELINE = 47.5
 SERVICE_TIERS: dict[int, List[dict]] = {
 
     4908: [  # IG Türk Takipçi → PRM4U: Instagram Takipçileri [Yenileme 15G] (eski: 47)
-        {"min": 25,    "max": 49,    "price_per_1000": 2520.0},
         {"min": 50,    "max": 74,    "price_per_1000": 2520.0},
         {"min": 75,    "max": 99,    "price_per_1000": 2160.0},
         {"min": 100,   "max": 199,   "price_per_1000": 2025.0},
@@ -148,18 +147,18 @@ SERVICE_TIERS: dict[int, List[dict]] = {
     ],
 
     4686: [  # TikTok Takipçi → PRM4U: TikTok Followers [High Quality] (eski: 10055)
+        # Maliyet: $5.00 × 47.5 = ₺237.5/1000 — minimum %30 marj → ₺309/1000
+        # PRM4U max = 50,000
         {"min": 50,    "max": 99,    "price_per_1000":  414.0},
         {"min": 100,   "max": 249,   "price_per_1000":  382.5},
         {"min": 250,   "max": 499,   "price_per_1000":  356.4},
         {"min": 500,   "max": 749,   "price_per_1000":  340.2},
-        {"min": 750,   "max": 999,   "price_per_1000":  298.8},
-        {"min": 1000,  "max": 2499,  "price_per_1000":  269.1},
-        {"min": 2500,  "max": 4999,  "price_per_1000":  251.6},
-        {"min": 5000,  "max": 9999,  "price_per_1000":  243.0},
-        {"min": 10000, "max": 24999, "price_per_1000":  233.9},
-        {"min": 25000, "max": 49999, "price_per_1000":  212.4},
-        {"min": 50000, "max": 99999, "price_per_1000":  180.0},
-        {"min": 100000,"max": 100000,"price_per_1000":  166.5},
+        {"min": 750,   "max": 999,   "price_per_1000":  309.0},
+        {"min": 1000,  "max": 2499,  "price_per_1000":  309.0},
+        {"min": 2500,  "max": 4999,  "price_per_1000":  309.0},
+        {"min": 5000,  "max": 9999,  "price_per_1000":  309.0},
+        {"min": 10000, "max": 24999, "price_per_1000":  309.0},
+        {"min": 25000, "max": 50000, "price_per_1000":  309.0},
     ],
 
     162: [  # TikTok Beğeni → PRM4U: TikTok Likes [Photos/Video] (eski: 10023)
@@ -254,17 +253,17 @@ _QTY_VIEW = [1000, 5000, 10000, 25000, 50000]  # izlenme
 
 FEATURED_PACKAGES: List[dict] = [
     # Instagram
-    {"jap_service_id": 4908, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",  "emoji": "📸", "platform": "Instagram"},
+    {"jap_service_id": 4908, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",   "emoji": "📸", "platform": "Instagram", "badge": "🔥 En Popüler"},
     {"jap_service_id": 4626, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
-    {"jap_service_id": 3,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",         "emoji": "❤️", "platform": "Instagram"},
+    {"jap_service_id": 3,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",          "emoji": "❤️", "platform": "Instagram"},
     # TikTok
-    {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",           "emoji": "🎵", "platform": "TikTok"},
-    {"jap_service_id": 167,  "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",           "emoji": "👁️", "platform": "TikTok"},
+    {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",            "emoji": "🎵", "platform": "TikTok", "badge": "⭐ En Çok Satan"},
+    {"jap_service_id": 167,  "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",            "emoji": "👁️", "platform": "TikTok"},
     # YouTube
-    {"jap_service_id": 3110, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",            "emoji": "▶️", "platform": "YouTube"},
-    {"jap_service_id": 4048, "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",          "emoji": "🎬", "platform": "YouTube"},
+    {"jap_service_id": 3110, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",             "emoji": "▶️", "platform": "YouTube", "badge": "🏆 Trend"},
+    {"jap_service_id": 4048, "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",           "emoji": "🎬", "platform": "YouTube"},
     # X
-    {"jap_service_id": 4259, "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                "emoji": "✖️", "platform": "X"},
+    {"jap_service_id": 4259, "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                 "emoji": "✖️", "platform": "X"},
 ]
 
 MIN_PRICE_TL = 5.0  # 1000 adet için minimum satış fiyatı (TL)
