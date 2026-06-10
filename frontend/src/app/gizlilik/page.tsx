@@ -3,12 +3,145 @@ import { Zap } from "lucide-react";
 
 export const metadata = {
   title: "Gizlilik Politikası — HypeUp",
+  description: "HypeUp platformunun kişisel verilerin korunmasına ilişkin gizlilik politikası.",
 };
+
+const sections = [
+  {
+    title: "1. Veri Sorumlusu",
+    body: `Bu Gizlilik Politikası, HypeUp ("Platform", "biz", "bizim") tarafından hazırlanmıştır. Platform, 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") ve Genel Veri Koruma Tüzüğü ("GDPR") kapsamında veri sorumlusu sıfatıyla hareket etmektedir.
+
+Veri işleme faaliyetlerimize ilişkin sorularınız için platform içi destek kanalı üzerinden bizimle iletişime geçebilirsiniz.`,
+  },
+  {
+    title: "2. Topladığımız Kişisel Veriler",
+    body: `Platformumuzu kullanırken aşağıdaki kişisel veriler işlenmektedir:
+
+Kimlik ve İletişim Verileri
+• E-posta adresi (hesap oluşturma, giriş ve iletişim amacıyla)
+• Şifre (bcrypt algoritmasıyla şifrelenmiş; hiçbir zaman düz metin olarak saklanmaz)
+
+İşlem ve Finansal Veriler
+• Bakiye yükleme miktarları ve tarihleri
+• Papara işlem referans kodları ve gönderici adı (ödeme doğrulama amacıyla)
+• Sipariş geçmişi, sipariş miktarları ve tutarları
+
+Hizmet Kullanım Verileri
+• Sipariş verilen sosyal medya profil linkleri (yalnızca sipariş iletimi amacıyla)
+• Hesap oluşturma tarihi, son giriş zamanı
+
+Teknik Veriler
+• IP adresi (güvenlik ve dolandırıcılık tespiti amacıyla)
+• Tarayıcı türü ve sürümü
+• Oturum çerezleri
+
+Sosyal medya profil linkleriniz yalnızca siparişinizi sağlayıcıya iletmek için kullanılır ve başka hiçbir amaçla işlenmez.`,
+  },
+  {
+    title: "3. Verilerin İşlenme Amaçları ve Hukuki Dayanakları",
+    body: `Kişisel verileriniz aşağıdaki amaçlar ve hukuki dayanaklar çerçevesinde işlenmektedir:
+
+• Hesap oluşturma ve kimlik doğrulama → Sözleşmenin ifası
+• Sipariş işleme ve teslimat takibi → Sözleşmenin ifası
+• Ödeme onayı ve bakiye yönetimi → Sözleşmenin ifası
+• Müşteri desteği sağlama → Sözleşmenin ifası ve meşru menfaat
+• Dolandırıcılık ve güvenlik ihlallerini önleme → Meşru menfaat ve yasal yükümlülük
+• Yasal yükümlülüklerin yerine getirilmesi → Yasal yükümlülük
+• Platform performansını iyileştirme → Meşru menfaat
+
+Doğrudan pazarlama için verilerinizi kullanmıyoruz.`,
+  },
+  {
+    title: "4. Verilerin Saklanma Süreleri",
+    body: `Kişisel verileriniz, işlenme amacının ortadan kalkmasıyla birlikte veya aşağıdaki süreler dolduğunda silinir, yok edilir veya anonim hale getirilir:
+
+• Hesap verileri: Hesap aktif olduğu sürece + hesap silme talebinden itibaren 30 gün
+• Finansal işlem kayıtları: Türk Ticaret Kanunu gereği 10 yıl
+• Sipariş geçmişi: Hesap kapanmasından itibaren 2 yıl (olası uyuşmazlıklar için)
+• Güvenlik logları (IP): 6 ay
+• Oturum çerezleri: Tarayıcı kapatıldığında otomatik silinir
+
+Yasal saklama yükümlülükleri gerektiren veriler, yalnızca bu yükümlülük kapsamında ve ilgili yasal süre boyunca tutulur.`,
+  },
+  {
+    title: "5. Verilerin Güvenliği",
+    body: `Verilerinizin güvenliğini sağlamak için aşağıdaki teknik ve idari tedbirler uygulanmaktadır:
+
+Teknik Önlemler
+• Tüm veri iletimi TLS 1.2+ şifrelemesiyle korunmaktadır
+• Şifreler bcrypt (cost factor 12) ile hashlenerek saklanır; düz metin hiçbir zaman kaydedilmez
+• Veriler Supabase altyapısında, ISO 27001 sertifikalı veri merkezlerinde barındırılmaktadır
+• JWT tabanlı kimlik doğrulama; tokenlar 24 saat sonra geçersiz olur
+• Veritabanı erişimi minimum yetki prensibiyle sınırlandırılmıştır
+
+İdari Önlemler
+• Platform altyapısına erişim yalnızca yetkili personele aittir
+• Üçüncü taraf erişimi gerektiğinde veri işleme sözleşmesi yapılmaktadır
+
+Buna karşın, internet üzerinden hiçbir veri iletiminin ya da elektronik depolama sisteminin %100 güvenli olmadığını belirtmek isteriz. Hesabınızda şüpheli bir aktivite fark ettiğinizde lütfen derhal bizimle iletişime geçin.`,
+  },
+  {
+    title: "6. Üçüncü Taraflarla Veri Paylaşımı",
+    body: `Kişisel verilerinizi aşağıdaki sınırlı durumlar dışında satmaz, kiralamaz veya paylaşmayız:
+
+Hizmet Sağlayıcılar
+• SMM paneli sağlayıcısı (PRM4U): Siparişinizi iletmek amacıyla yalnızca profil linki ve sipariş miktarı paylaşılır. E-posta adresiniz veya diğer kişisel bilgileriniz iletilmez.
+• Supabase (veritabanı altyapısı): Verileriniz bu platform üzerinde şifreli olarak barındırılmaktadır.
+
+Yasal Zorunluluklar
+• Yetkili kamu kurum ve kuruluşlarının yasal talepleri halinde, yalnızca talep edilen bilgiler ve geçerli yasal çerçeve kapsamında paylaşılır.
+
+Ödeme bilgileriniz (Papara hesap numarası, işlem referans kodu) tarafımızca doğrulama amacıyla kaydedilir ancak üçüncü taraflarla paylaşılmaz.`,
+  },
+  {
+    title: "7. Çerezler ve Takip Teknolojileri",
+    body: `Platformumuz yalnızca zorunlu çerezler kullanmaktadır:
+
+Zorunlu Çerezler
+• Oturum tokeni (auth-token): Giriş durumunuzu korumak için kullanılır. Tarayıcı çerezinde veya local storage'da saklanır. Çıkış yaptığınızda silinir.
+
+Platformumuzda analitik, reklam veya üçüncü taraf takip çerezleri kullanılmamaktadır. Google Analytics, Facebook Pixel veya benzeri araçlar yer almamaktadır.
+
+Tarayıcı ayarlarınızdan çerezleri engelleyebilirsiniz; ancak bu durumda platformda oturum açma işlevi çalışmayabilir.`,
+  },
+  {
+    title: "8. KVKK ve GDPR Kapsamındaki Haklarınız",
+    body: `6698 sayılı KVKK'nın 11. maddesi ve GDPR'ın 15-22. maddeleri uyarınca aşağıdaki haklara sahipsiniz:
+
+• Bilgi talep etme hakkı: Hangi verilerinizin işlendiğini öğrenme
+• Erişim hakkı: İşlenen verilerinizin bir kopyasını talep etme
+• Düzeltme hakkı: Hatalı veya eksik verilerin güncellenmesini talep etme
+• Silme hakkı ("Unutulma hakkı"): Verilerinizin silinmesini talep etme (yasal saklama yükümlülükleri saklı kalmak kaydıyla)
+• İşleme kısıtlama hakkı: Belirli durumlarda veri işlemenin sınırlandırılmasını talep etme
+• Veri taşınabilirliği hakkı: Verilerinizi yapılandırılmış, makine okunabilir formatta alma
+• İtiraz hakkı: Meşru menfaat veya kamu yararına dayalı işleme itiraz etme
+• Otomatik karara itiraz hakkı: Yalnızca otomatik işlemeye dayalı kararlara itiraz etme
+
+Bu haklarınızı kullanmak için platform içindeki destek kanalı üzerinden talebinizi iletebilirsiniz. Talepler 30 gün içinde yanıtlanır. Kimlik doğrulama amacıyla hesabınıza kayıtlı e-posta adresi üzerinden göndermenizi tavsiye ederiz.
+
+Yanıtımızdan memnun kalmamanız halinde Kişisel Verileri Koruma Kurumu'na (KVKK) şikâyette bulunabilirsiniz.`,
+  },
+  {
+    title: "9. Veri İhlali Bildirimi",
+    body: `Kişisel verilerinizin güvenliğini etkileyen bir veri ihlali tespit etmemiz halinde:
+
+• İhlal 72 saat içinde ilgili denetim otoritesine bildirilir (KVKK / GDPR yükümlülüğü)
+• Yüksek risk oluşturan ihlallerde etkilenen kullanıcılara gecikmeksizin bildirim yapılır
+• İhlalin kapsamı, olası etkileri ve alınan önlemler hakkında bilgilendirme sağlanır`,
+  },
+  {
+    title: "10. Çocukların Gizliliği",
+    body: `Platformumuz 18 yaşın altındaki kişilere yönelik değildir ve bilerek bu yaş grubundan kişisel veri toplamayız. 18 yaşın altındaki bir kullanıcıya ait veri topladığımızı fark etmemiz durumunda söz konusu veriler derhal silinir.`,
+  },
+  {
+    title: "11. Politika Değişiklikleri",
+    body: `Bu gizlilik politikası zaman zaman güncellenebilir. Önemli değişiklikler yapılması halinde platform üzerinden bildirim gönderilir ve sayfanın üst kısmındaki "Son güncelleme" tarihi güncellenir. Platformu kullanmaya devam etmeniz, güncellenmiş politikayı kabul ettiğiniz anlamına gelir.`,
+  },
+];
 
 export default function GizlilikPage() {
   return (
     <div className="min-h-screen bg-[#07060f] text-white">
-      {/* Nav */}
       <nav className="border-b border-white/[0.07] px-5 py-4">
         <div className="max-w-3xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -23,70 +156,16 @@ export default function GizlilikPage() {
 
       <main className="max-w-3xl mx-auto px-5 py-12">
         <h1 className="text-3xl font-black mb-2">Gizlilik Politikası</h1>
-        <p className="text-white/35 text-sm mb-10">Son güncelleme: Haziran 2026</p>
+        <p className="text-white/35 text-sm mb-10">Son güncelleme: 10 Haziran 2026</p>
 
-        {[
-          {
-            title: "1. Topladığımız Bilgiler",
-            body: `HypeUp, hizmetlerimizi sunabilmek için aşağıdaki kişisel verileri toplar:
-• Hesap bilgileri: e-posta adresi, şifre (şifrelenmiş olarak saklanır)
-• İşlem bilgileri: sipariş geçmişi, bakiye hareketleri, ödeme kayıtları
-• Teknik veriler: IP adresi, tarayıcı türü, kullanım istatistikleri
+        <div className="bg-violet-500/[0.07] border border-violet-500/20 rounded-xl p-4 mb-10 text-sm text-white/60 leading-relaxed">
+          HypeUp olarak kişisel verilerinizin gizliliğine önem veriyoruz. Bu politika, hangi verileri topladığımızı, neden topladığımızı ve nasıl koruduğumuzu açıklar. 6698 sayılı KVKK ve GDPR kapsamındaki haklarınız bu belgede detaylıca belirtilmektedir.
+        </div>
 
-Sosyal medya hesap bilgilerinizi (kullanıcı adı, profil linki) yalnızca verdiğiniz siparişi yerine getirmek amacıyla işleriz. Bu bilgiler üçüncü taraflarla paylaşılmaz.`,
-          },
-          {
-            title: "2. Verilerin Kullanım Amacı",
-            body: `Topladığımız verileri şu amaçlarla kullanırız:
-• Hesabınızı oluşturmak ve yönetmek
-• Siparişlerinizi işlemek ve teslimat durumunu bildirmek
-• Ödeme işlemlerini gerçekleştirmek
-• Müşteri desteği sağlamak
-• Platformu geliştirmek ve güvenliğini korumak
-• Yasal yükümlülükleri yerine getirmek`,
-          },
-          {
-            title: "3. Verilerin Saklanması ve Güvenliği",
-            body: `Verileriniz Supabase altyapısında AB veri merkezlerinde şifreli olarak saklanır. Şifreleriniz bcrypt algoritmasıyla hashlenerek depolanır; düz metin olarak hiçbir zaman kaydedilmez. Tüm iletişim TLS/SSL şifrelemesiyle korunur.
-
-Verilerinizi yetkisiz erişime, değiştirilmeye veya ifşa edilmeye karşı korumak için makul teknik ve organizasyonel önlemler alıyoruz. Ancak internet üzerinden hiçbir iletimin %100 güvenli olmadığını belirtmeliyiz.`,
-          },
-          {
-            title: "4. Üçüncü Taraflarla Paylaşım",
-            body: `Kişisel verilerinizi şu durumlar dışında satmaz, kiralamaz veya üçüncü taraflarla paylaşmayız:
-• Sipariş teslimatı için hizmet sağlayıcılarımıza (yalnızca hedef link ve sipariş miktarı)
-• Yasal zorunluluk halinde yetkili makamlarla
-• Açık onayınız olan durumlarda
-
-Ödeme bilgileriniz tarafımızca saklanmaz; Papara üzerinden gerçekleştirilen işlemler doğrudan ilgili ödeme platformunun gizlilik politikasına tabidir.`,
-          },
-          {
-            title: "5. Çerezler",
-            body: `Platformumuz oturum yönetimi için zorunlu çerezler kullanır. Bu çerezler, giriş yapmanızı sağlayan token bilgilerini tarayıcınızda saklar. Analitik veya reklam amaçlı çerez kullanılmamaktadır.`,
-          },
-          {
-            title: "6. Haklarınız",
-            body: `Kişisel Verilerin Korunması Kanunu (KVKK) ve GDPR kapsamında aşağıdaki haklara sahipsiniz:
-• Verilerinize erişim hakkı
-• Hatalı verilerin düzeltilmesini talep etme hakkı
-• Verilerinizin silinmesini talep etme hakkı ("unutulma hakkı")
-• Veri işlemeye itiraz etme hakkı
-• Veri taşınabilirliği hakkı
-
-Bu haklarınızı kullanmak için profil sayfanızdan veya destek kanalımız aracılığıyla bizimle iletişime geçebilirsiniz.`,
-          },
-          {
-            title: "7. Hesap Silme",
-            body: `Hesabınızı ve tüm kişisel verilerinizi silmek istediğinizde destek ekibimizle iletişime geçebilirsiniz. Yasal saklama yükümlülükleri kapsamındaki finansal kayıtlar dışında tüm verileriniz 30 gün içinde sistemden kalıcı olarak silinir.`,
-          },
-          {
-            title: "8. İletişim",
-            body: `Bu gizlilik politikasıyla ilgili sorularınız için platformdaki destek kanalı aracılığıyla bize ulaşabilirsiniz. Politikamızda yapılacak değişiklikler bu sayfada yayımlanacak ve önemli değişikliklerde kayıtlı kullanıcılara bildirim gönderilecektir.`,
-          },
-        ].map(({ title, body }) => (
-          <section key={title} className="mb-8">
-            <h2 className="text-base font-bold text-white/90 mb-3">{title}</h2>
-            <p className="text-sm text-white/45 leading-relaxed whitespace-pre-line">{body}</p>
+        {sections.map(({ title, body }) => (
+          <section key={title} className="mb-9">
+            <h2 className="text-sm font-bold text-white/90 mb-3 uppercase tracking-wide">{title}</h2>
+            <p className="text-sm text-white/50 leading-7 whitespace-pre-line">{body}</p>
           </section>
         ))}
 
