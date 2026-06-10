@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { servicesApi } from "@/lib/api";
 import SocialProofToast from "@/components/SocialProofToast";
+import AdBanner from "@/components/AdBanner";
 import {
   Zap, ChevronDown, ChevronRight, ArrowRight,
   Home, Search, ShoppingCart, Headphones, LogIn,
@@ -345,6 +346,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* REKLAM — Rakamlar altı */}
+      <div className="max-w-3xl mx-auto px-5 py-6">
+        <AdBanner slot="7519591468" />
+      </div>
+
       {/* PLATFORMLAR */}
       <section className="max-w-6xl mx-auto px-5 py-14">
         <div className="mb-8">
@@ -435,6 +441,11 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* REKLAM — SSS öncesi */}
+      <div className="max-w-3xl mx-auto px-5 py-4">
+        <AdBanner slot="7519591468" />
+      </div>
 
       {/* SSS */}
       <section className="bg-[#0c0a19] border-y border-white/[0.06]">
