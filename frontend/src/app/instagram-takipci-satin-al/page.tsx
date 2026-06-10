@@ -3,13 +3,13 @@ import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
 
 export const metadata: Metadata = {
-  title: "Instagram Takipçi Satın Al | Güvenli ve Hızlı | HypeUp",
+  title: "Instagram Takipçi Satın Al | Güvenli ve Hızlı",
   description:
     "Instagram takipçi satın al, hesabını büyüt. Gerçek görünümlü takipçiler, hızlı teslimat, 7/24 destek. ₺5'ten başlayan fiyatlarla HypeUp'ta hemen sipariş ver.",
   keywords:
     "instagram takipçi satın al, instagram takipçi, takipçi satın al, instagram büyütme, sosyal medya panel",
   openGraph: {
-    title: "Instagram Takipçi Satın Al | HypeUp",
+    title: "Instagram Takipçi Satın Al",
     description:
       "Hesabını güçlendir. Gerçek görünümlü Instagram takipçileri, hızlı teslimat, uygun fiyat.",
     url: "https://hypeuppp.vercel.app/instagram-takipci-satin-al",

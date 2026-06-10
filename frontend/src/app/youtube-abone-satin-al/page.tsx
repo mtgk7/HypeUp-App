@@ -3,13 +3,13 @@ import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
 
 export const metadata: Metadata = {
-  title: "YouTube Abone Satın Al | Güvenli ve Hızlı | HypeUp",
+  title: "YouTube Abone Satın Al | Güvenli ve Hızlı",
   description:
     "YouTube abone satın al, kanalını büyüt. 1000 abone hedefine ulaş, monetizasyon şartını tamamla. Hızlı teslimat, uygun TL fiyatları. HypeUp'ta hemen sipariş ver.",
   keywords:
     "youtube abone satın al, youtube abone, youtube büyütme, youtube monetizasyon, sosyal medya panel",
   openGraph: {
-    title: "YouTube Abone Satın Al | HypeUp",
+    title: "YouTube Abone Satın Al",
     description:
       "YouTube kanalını büyüt. 1000 abone hedefine ulaş. Hızlı teslimat, güvenli ödeme.",
     url: "https://hypeuppp.vercel.app/youtube-abone-satin-al",

@@ -3,13 +3,13 @@ import Link from "next/link";
 import AdBanner from "@/components/AdBanner";
 
 export const metadata: Metadata = {
-  title: "Instagram Beğeni Satın Al | Güvenli ve Hızlı | HypeUp",
+  title: "Instagram Beğeni Satın Al | Güvenli ve Hızlı",
   description:
     "Instagram beğeni satın al, gönderilerini öne çıkar. Anlık teslimat, güvenli ödeme, 7/24 destek. ₺5'ten başlayan TL fiyatlarıyla HypeUp'ta hemen sipariş ver.",
   keywords:
     "instagram beğeni satın al, instagram beğeni, beğeni satın al, instagram gönderi, sosyal medya panel",
   openGraph: {
-    title: "Instagram Beğeni Satın Al | HypeUp",
+    title: "Instagram Beğeni Satın Al",
     description:
       "Instagram gönderilerini öne çıkar. Anlık beğeni teslimatı, güvenli ödeme.",
     url: "https://hypeuppp.vercel.app/instagram-begeni-satin-al",
