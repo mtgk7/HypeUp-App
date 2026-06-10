@@ -155,6 +155,36 @@ async def full_sync():
             logger.info(f"[FullSync] Aktif olmayan {len(inactive_cat_ids)} kategorinin servisleri pasif yapıldı")
 
         logger.info(f"[FullSync] Tamamlandı: {synced} güncellendi, {skipped} atlandı, kur ₺{dolar_kuru:.2f}")
+
+        # ── Marj güvenlik katmanı ─────────────────────────────
+        # PRM4U fiyatları değişince tier'ların zarar ettirmemesini garantile
+        from app.services.pricing_service import apply_margin_floor, SERVICE_TIERS, MIN_MARGIN
+        _SID_NAMES = {
+            4908: "IG Türk Takipçi", 4626: "IG Global Takipçi", 3: "IG Beğeni",
+            1549: "IG Türk Beğeni",  3110: "YT Abone",           4048: "YT İzlenme",
+            4686: "TikTok Takipçi",  162:  "TikTok Beğeni",      167:  "TikTok İzlenme",
+            4259: "X Takipçi",       145:  "X Beğeni",
+        }
+        prm4u_price_map = {
+            int(svc.get("service", 0)): float(str(svc.get("rate", 0)).replace(",", "."))
+            for svc in prm4u_services if svc.get("service")
+        }
+        tier_service_prices = {sid: prm4u_price_map[sid] for sid in SERVICE_TIERS if sid in prm4u_price_map}
+        floor_changes = apply_margin_floor(tier_service_prices, dolar_kuru)
+
+        if floor_changes:
+            lines = ["⚠️ <b>Otomatik Marj Koruması Devreye Girdi</b>",
+                     f"Sağlayıcı fiyatı artışı tespit edildi — {len(floor_changes)} servis etkilendi\n"]
+            for c in floor_changes:
+                name = _SID_NAMES.get(c["sid"], str(c["sid"]))
+                lines.append(f"📦 <b>{name}</b> (ID {c['sid']})")
+                lines.append(f"   Floor: ₺{c['floor']:.2f}/1000 (maliyet ×{MIN_MARGIN})")
+                for v in c["violations"]:
+                    lines.append(f"   {v['min']:,}–{v['max']:,} adet: ₺{v['price']} → ₺{c['floor']:.2f}")
+            await send_telegram("\n".join(lines))
+            logger.warning(f"[MarjKoruma] {len(floor_changes)} servis için floor uygulandı.")
+        # ─────────────────────────────────────────────────────
+
         await send_telegram(
             f"🔄 <b>Otomatik Senkronizasyon</b>\n"
             f"✅ {synced} servis güncellendi\n"

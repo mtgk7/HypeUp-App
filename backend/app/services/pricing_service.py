@@ -22,6 +22,13 @@ from typing import Optional, List
 # ──────────────────────────────────────────────────────────────
 RATE_BASELINE = 47.5
 
+# Minimum marj oranı — tier fiyatı maliyet × bu değerin altına düşemez (runtime floor)
+MIN_MARGIN = 1.30  # %30
+
+# Runtime floor tablosu: full_sync her çalıştığında güncellenir
+# {jap_service_id: min_tl_per_1000} — boş başlar, startup full_sync'te dolar
+_TIER_FLOOR: dict[int, float] = {}
+
 # ──────────────────────────────────────────────────────────────
 # Miktara göre kademeli fiyatlandırma (TakipciBudur x0.90)
 # key: jap_service_id  value: [{min, max, price_per_1000}]
@@ -227,21 +234,59 @@ def get_tier_price(
 ) -> Optional[float]:
     """
     Miktar-bazlı retail fiyat (1000 adet TL) — kura ORANTILI ölçeklenir.
-
-    Tier fiyatları RATE_BASELINE (₺47.50) kurunda tanımlandı. Güncel kur değiştikçe:
-        fiyat = tier_fiyatı × (guncel_kur / RATE_BASELINE)
-    Böylece sağlayıcı maliyetine olan kat (marj) sabit kalır — kuru %5 artırınca
-    bu servisin fiyatı da %5 artar. Tier yoksa None döner.
-
-    Performans: çok sayıda servis için döngüde çağrılırken `dolar_kuru` bir kez
-    çekilip parametre olarak geçilmeli (yoksa her çağrıda DB'den okunur).
+    Runtime floor (_TIER_FLOOR) aktifse, maliyet + MIN_MARGIN garantisi uygulanır.
     """
     base = _tier_base_price(jap_service_id, quantity)
     if base is None:
         return None
     if dolar_kuru is None:
         dolar_kuru = get_current_rate()
-    return round(base * (dolar_kuru / RATE_BASELINE), 4)
+    price = round(base * (dolar_kuru / RATE_BASELINE), 4)
+    floor = _TIER_FLOOR.get(jap_service_id)
+    if floor is not None:
+        price = max(price, floor)
+    return price
+
+
+def apply_margin_floor(
+    service_dolar_prices: dict[int, float],
+    dolar_kuru: float,
+) -> list[dict]:
+    """
+    PRM4U fiyatları değişince tier'ların zarar ettirmemesini garantiler.
+    full_sync() tarafından her 12 saatte bir + startup'ta çağrılır.
+
+    Args:
+        service_dolar_prices: {jap_service_id: usd_per_1000} — PRM4U anlık fiyatlar
+        dolar_kuru: güncel TL/USD kuru
+
+    Returns:
+        Değiştirilen tier'ların listesi (Telegram bildirimi için). Boşsa değişiklik yok.
+    """
+    changes = []
+    for sid, usd_price in service_dolar_prices.items():
+        tiers = SERVICE_TIERS.get(sid)
+        if not tiers:
+            continue
+        cost_tl = usd_price * dolar_kuru          # TL/1000, sağlayıcı maliyeti
+        floor_tl = round(cost_tl * MIN_MARGIN, 2) # TL/1000, minimum satış fiyatı
+
+        violations = [
+            {
+                "min": t["min"], "max": t["max"],
+                "price": round(t["price_per_1000"] * (dolar_kuru / RATE_BASELINE), 2),
+            }
+            for t in tiers
+            if round(t["price_per_1000"] * (dolar_kuru / RATE_BASELINE), 4) < floor_tl
+        ]
+
+        if violations:
+            _TIER_FLOOR[sid] = floor_tl
+            changes.append({"sid": sid, "floor": floor_tl, "violations": violations})
+        else:
+            _TIER_FLOOR.pop(sid, None)  # Maliyet düştüyse floor'u kaldır
+
+    return changes
 
 
 # ──────────────────────────────────────────────────────────────
