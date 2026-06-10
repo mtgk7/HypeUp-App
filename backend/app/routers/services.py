@@ -126,7 +126,7 @@ async def list_featured_packages(response: Response):
         if not any(o["qty"] == default_qty for o in options):
             default_qty = options[0]["qty"]
 
-        out.append({
+        entry = {
             "label":          pkg["label"],
             "emoji":          pkg["emoji"],
             "platform":       cat.get("platform_name", pkg["platform"]),
@@ -135,7 +135,10 @@ async def list_featured_packages(response: Response):
             "min_order":      min_order,
             "default_qty":    default_qty,
             "options":        options,
-        })
+        }
+        if pkg.get("badge"):
+            entry["badge"] = pkg["badge"]
+        out.append(entry)
     return out
 
 

@@ -41,6 +41,7 @@ export const authApi = {
     api.post("/auth/login", { email, password }),
   changePassword: (old_password: string, new_password: string) =>
     api.patch("/auth/change-password", { old_password, new_password }),
+  referralStats: () => api.get("/auth/referral-stats"),
 };
 
 // ──────────────────────────────────────────────

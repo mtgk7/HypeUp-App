@@ -235,7 +235,7 @@ export default function LandingPage() {
           <div className="hidden sm:flex items-center gap-1">
             <Link href="/login" className="text-sm text-white/40 hover:text-white/80 px-3.5 py-1.5 rounded-lg transition">Giriş Yap</Link>
             <Link href="/register" className="text-sm font-semibold bg-violet-600 hover:bg-violet-500 px-4 py-2 rounded-lg transition shadow-lg shadow-violet-600/20">
-              Ücretsiz Başla
+              Üye Ol
             </Link>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function LandingPage() {
 
             <div className="flex gap-3 flex-wrap">
               <Link href="/register" className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white font-semibold px-6 py-3 rounded-xl text-sm transition shadow-lg shadow-violet-600/25">
-                Ücretsiz Başla <ArrowRight className="w-4 h-4" />
+                Üye Ol <ArrowRight className="w-4 h-4" />
               </Link>
               <Link href="/register" className="inline-flex items-center gap-2 border border-amber-500/30 hover:border-amber-400/60 hover:bg-amber-500/5 text-amber-400/80 hover:text-amber-300 font-medium px-6 py-3 rounded-xl text-sm transition">
                 🎁 Bonus Kazan
@@ -475,7 +475,7 @@ export default function LandingPage() {
               <p className="text-white/70 text-[15px]">100 TL yükle, 25 TL bizden. 200 TL yükle, 75 TL bizden.</p>
             </div>
             <Link href="/register" className="flex-shrink-0 inline-flex items-center gap-2 bg-white text-violet-700 font-bold px-7 py-3.5 rounded-xl text-sm hover:bg-violet-50 transition shadow-xl">
-              Ücretsiz Kayıt Ol <ArrowRight className="w-4 h-4" />
+              Üye Ol <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
@@ -497,14 +497,22 @@ export default function LandingPage() {
             {[
               { title: "Hizmetler",  links: ["Instagram Takipçi", "TikTok Takipçi", "YouTube Abone", "Telegram Üye", "Instagram Beğeni"] },
               { title: "Kategoriler", links: ["Takipçi", "Beğeni", "İzlenme", "Abone", "Yorum"] },
-              { title: "Kurumsal",   links: ["Hakkımızda", "Gizlilik Politikası", "Kullanım Şartları", "İletişim"] },
+              { title: "Kurumsal",   links: [
+                  { label: "Hakkımızda",          href: "/register" },
+                  { label: "Gizlilik Politikası", href: "/gizlilik" },
+                  { label: "Kullanım Şartları",   href: "/kullanim-sartlari" },
+                  { label: "İletişim",             href: "/register" },
+                ] },
             ].map(({ title, links }) => (
               <div key={title}>
                 <h4 className="text-[11px] font-semibold text-white/40 uppercase tracking-widest mb-4">{title}</h4>
                 <ul className="space-y-2.5">
-                  {links.map(l => (
-                    <li key={l}><Link href="/register" className="text-xs text-white/25 hover:text-white/55 transition">{l}</Link></li>
-                  ))}
+                  {links.map(l => {
+                    const item = typeof l === "string" ? { label: l, href: "/register" } : l;
+                    return (
+                      <li key={item.label}><Link href={item.href} className="text-xs text-white/25 hover:text-white/55 transition">{item.label}</Link></li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}

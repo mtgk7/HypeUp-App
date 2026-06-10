@@ -97,6 +97,7 @@ interface FeaturedPackage {
   min_order: number;
   default_qty: number;
   options: FeaturedOption[];
+  badge?: string;
 }
 
 function QuickPickCard({ pkg, onApply }: { pkg: FeaturedPackage; onApply: (pkg: FeaturedPackage, qty: number) => void }) {
@@ -105,8 +106,13 @@ function QuickPickCard({ pkg, onApply }: { pkg: FeaturedPackage; onApply: (pkg: 
   const meta = PLATFORM_META[pkg.platform];
   const Icon = meta?.icon;
   return (
-    <div className="group bg-[#151515] border border-white/8 hover:border-violet-500/40 rounded-2xl p-4 flex flex-col transition-all">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="group relative bg-[#151515] border border-white/8 hover:border-violet-500/40 rounded-2xl p-4 flex flex-col transition-all">
+      {pkg.badge && (
+        <span className="absolute -top-2.5 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/30 text-amber-300 whitespace-nowrap">
+          {pkg.badge}
+        </span>
+      )}
+      <div className="flex items-center gap-2 mb-2 mt-1">
         {Icon && (
           <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: meta.dimColor }}>
             <Icon className="w-4 h-4" color={meta.color} />

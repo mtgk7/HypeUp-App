@@ -121,6 +121,22 @@ async def change_password(body: ChangePasswordRequest, current_user: dict = Depe
     return {"ok": True}
 
 
+@router.get("/referral-stats")
+async def referral_stats(current_user: dict = Depends(get_current_user)):
+    db = get_supabase()
+    s = get_settings()
+    result = db.table("users").select("id, created_at").eq("referred_by", current_user["id"]).execute()
+    referred_count = len(result.data or [])
+    bonus_earned = round(referred_count * s.REFERRAL_BONUS_TL, 2)
+    ref_code = current_user.get("referral_code", "")
+    return {
+        "referral_code": ref_code,
+        "referred_count": referred_count,
+        "bonus_earned": bonus_earned,
+        "bonus_per_referral": s.REFERRAL_BONUS_TL,
+    }
+
+
 @router.get("/me", response_model=UserOut)
 async def get_me(current_user: dict = Depends(get_current_user)):
     """Giriş yapan kullanıcının güncel profili (bakiye dahil)."""

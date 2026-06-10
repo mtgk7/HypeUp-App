@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import {
   Zap, PlusCircle, List, Users, Settings, LogOut, BarChart3,
-  Home, Wallet, ShoppingBag, Package, CreditCard, User,
+  Home, Wallet, ShoppingBag, Package, CreditCard, User, Gift,
   Menu, X,
 } from "lucide-react";
 import NotificationBell from "@/components/NotificationBell";
@@ -18,11 +18,12 @@ interface SidebarProps {
 }
 
 const userLinks = [
-  { href: "/dashboard",             label: "Genel Bakış",  icon: Home },
-  { href: "/dashboard/new-order",   label: "Yeni Sipariş", icon: PlusCircle },
-  { href: "/dashboard/orders",      label: "Siparişlerim", icon: List },
-  { href: "/dashboard/add-balance", label: "Bakiye Yükle", icon: Wallet },
-  { href: "/dashboard/profile",     label: "Profilim",     icon: User },
+  { href: "/dashboard",             label: "Genel Bakış",       icon: Home },
+  { href: "/dashboard/new-order",   label: "Yeni Sipariş",      icon: PlusCircle },
+  { href: "/dashboard/orders",      label: "Siparişlerim",      icon: List },
+  { href: "/dashboard/add-balance", label: "Bakiye Yükle",      icon: Wallet },
+  { href: "/dashboard/referral",    label: "Arkadaşını Davet Et", icon: Gift },
+  { href: "/dashboard/profile",     label: "Profilim",          icon: User },
 ];
 
 const adminLinks = [
