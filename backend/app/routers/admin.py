@@ -14,6 +14,20 @@ import logging
 router = APIRouter(prefix="/admin", tags=["Admin"])
 logger = logging.getLogger(__name__)
 
+
+def _fetch_all_orders(db, select: str = "charge_tl, cost_dolar, status") -> list:
+    """Supabase 1000-satır limitini aşmak için tüm siparişleri sayfalı çeker."""
+    all_rows, PAGE, offset = [], 1000, 0
+    while True:
+        batch = db.table("orders").select(select).range(offset, offset + PAGE - 1).execute()
+        if not batch.data:
+            break
+        all_rows.extend(batch.data)
+        if len(batch.data) < PAGE:
+            break
+        offset += PAGE
+    return all_rows
+
 PAYMENT_BONUS_TIERS = [
     (200, 75),
     (150, 50),
@@ -33,8 +47,7 @@ async def get_stats(_admin: dict = Depends(require_admin)):
     db = get_supabase()
     dolar_kuru = get_current_rate()
 
-    orders_result = db.table("orders").select("charge_tl, cost_dolar, status").execute()
-    rows = orders_result.data or []
+    rows = _fetch_all_orders(db)
 
     total_revenue = sum(float(r["charge_tl"]) for r in rows)
     total_cost_dolar = sum(float(r["cost_dolar"]) for r in rows)

@@ -20,11 +20,6 @@ class Settings(BaseSettings):
     # Döviz API (fallback: TCMB)
     CURRENCY_API_URL: str = "https://api.exchangerate-api.com/v4/latest/USD"
 
-    # Shopier
-    SHOPIER_API_KEY: str = ""
-    SHOPIER_API_SECRET: str = ""
-    SHOPIER_WEBSITE_INDEX: int = 1
-
     # Telegram
     TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_CHAT_ID: str = ""

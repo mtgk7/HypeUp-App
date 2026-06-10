@@ -254,7 +254,17 @@ async def cmd_stats(chat_id: str):
     db = get_supabase()
     today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-    orders = db.table("orders").select("charge_tl, cost_dolar, status, created_at").execute().data or []
+    # Tüm siparişleri sayfalı çek — Supabase 1000-satır limitini aşar
+    orders, PAGE, offset = [], 1000, 0
+    while True:
+        batch = db.table("orders").select("charge_tl, cost_dolar, status, created_at").range(offset, offset + PAGE - 1).execute()
+        if not batch.data:
+            break
+        orders.extend(batch.data)
+        if len(batch.data) < PAGE:
+            break
+        offset += PAGE
+
     users  = db.table("users").select("id", count="exact").execute()
     payments = db.table("payment_transactions").select("amount_tl").eq("status", "completed").execute().data or []
 

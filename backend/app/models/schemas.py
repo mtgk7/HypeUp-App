@@ -135,25 +135,14 @@ class CurrencyRateResponse(BaseModel):
 # PAYMENT
 # ──────────────────────────────────────────────
 
-class PaymentInitRequest(BaseModel):
-    amount: float = Field(gt=9, lt=10001, description="Yüklenecek TL miktarı (min 10, max 10000)")
-
-
-class PaymentInitResponse(BaseModel):
-    shopier_url: str
-    form_fields: dict
-    platform_order_id: str
-
-
 class PaymentTransactionOut(BaseModel):
     id: str
     amount_tl: float
     status: Literal["pending", "completed", "failed"]
     platform_order_id: str
-    shopier_payment_id: Optional[str] = None
     sender_name: Optional[str] = None
     reference_code: Optional[str] = None
-    payment_method: Optional[str] = "shopier"
+    payment_method: Optional[str] = None
     created_at: datetime
 
 
