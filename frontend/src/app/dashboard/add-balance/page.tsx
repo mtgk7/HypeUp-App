@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Wallet, Copy, Check, Loader2, ChevronRight, Zap, CheckCircle, Gift } from "lucide-react";
 import { paymentApi } from "@/lib/api";
+import { conversionInitiateCheckout } from "@/lib/gtag";
 
 const PRESETS = [50, 100, 150, 200, 500];
 const PAPARA_NO = "1773332769";
@@ -45,6 +46,7 @@ export default function AddBalancePage() {
     try {
       const res = await paymentApi.manual(amount, senderName.trim());
       setRefCode(res.data.reference_code);
+      conversionInitiateCheckout(amount);
       setStep("done");
     } catch {
       setError("İşlem başlatılamadı, tekrar deneyin.");

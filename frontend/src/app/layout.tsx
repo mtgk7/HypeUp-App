@@ -3,6 +3,8 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Script from "next/script";
 
+const GTAG_ID = process.env.NEXT_PUBLIC_GTAG_ID ?? "";
+
 export const metadata: Metadata = {
   title: "HypeUp — SMM Panel",
   description: "Sosyal medya büyümeni hızlandır",
@@ -19,6 +21,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="panel-bg text-white min-h-screen antialiased">
         {children}
         <Toaster />
+
+        {/* ── Google Tag (Ads + Analytics) ── */}
+        {GTAG_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GTAG_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script
+              id="gtag-init"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', '${GTAG_ID}', { page_path: window.location.pathname });
+                `,
+              }}
+            />
+          </>
+        )}
+
         <Script
           id="tawk-to"
           strategy="afterInteractive"

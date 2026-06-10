@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 import { authApi } from "@/lib/api";
 import { Zap, Mail, Lock, Gift, Loader2, Users } from "lucide-react";
+import { conversionSignUp } from "@/lib/gtag";
 
 function RegisterForm() {
   const router = useRouter();
@@ -33,6 +34,7 @@ function RegisterForm() {
       const res = await authApi.register(email, password, refCode || undefined);
       Cookies.set("hypeup_token", res.data.access_token, { expires: 1 });
       Cookies.set("hypeup_role", res.data.role, { expires: 1 });
+      conversionSignUp();
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Kayıt başarısız");
