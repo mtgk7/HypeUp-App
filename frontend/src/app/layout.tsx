@@ -72,6 +72,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
+      <head>
+        {/* ── Google AdSense — <head>'de olmalı, crawler buraya bakıyor ── */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8655681325124193"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="panel-bg text-white min-h-screen antialiased">
         {children}
         <Toaster />
@@ -97,14 +105,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             />
           </>
         )}
-
-        {/* ── Google AdSense ── */}
-        <Script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8655681325124193"
-          crossOrigin="anonymous"
-          strategy="afterInteractive"
-        />
 
         <Script
           id="tawk-to"
