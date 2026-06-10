@@ -15,6 +15,8 @@ export default function AdBanner({ slot, format = "auto", className }: AdBannerP
     } catch {}
   }, []);
 
+  const isAutoRelaxed = format === "autorelaxed";
+
   return (
     <ins
       className={`adsbygoogle${className ? ` ${className}` : ""}`}
@@ -22,7 +24,7 @@ export default function AdBanner({ slot, format = "auto", className }: AdBannerP
       data-ad-client="ca-pub-8655681325124193"
       data-ad-slot={slot}
       data-ad-format={format}
-      data-full-width-responsive="true"
+      {...(!isAutoRelaxed ? { "data-full-width-responsive": "true" } : {})}
     />
   );
 }

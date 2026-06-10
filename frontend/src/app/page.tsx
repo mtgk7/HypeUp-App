@@ -492,6 +492,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* REKLAM — Footer öncesi (autorelaxed) */}
+      <div className="max-w-3xl mx-auto px-5 py-6">
+        <AdBanner slot="7380529666" format="autorelaxed" />
+      </div>
+
       {/* FOOTER */}
       <footer className="border-t border-white/[0.08] bg-white/[0.01] pt-12 pb-24 sm:pb-12">
         <div className="max-w-6xl mx-auto px-5">
