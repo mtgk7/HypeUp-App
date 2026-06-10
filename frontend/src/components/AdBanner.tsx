@@ -5,10 +5,11 @@ import { useEffect } from "react";
 interface AdBannerProps {
   slot: string;
   format?: string;
+  layout?: string;
   className?: string;
 }
 
-export default function AdBanner({ slot, format = "auto", className }: AdBannerProps) {
+export default function AdBanner({ slot, format = "auto", layout, className }: AdBannerProps) {
   useEffect(() => {
     try {
       ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
@@ -16,15 +17,17 @@ export default function AdBanner({ slot, format = "auto", className }: AdBannerP
   }, []);
 
   const isAutoRelaxed = format === "autorelaxed";
+  const isInArticle = layout === "in-article";
 
   return (
     <ins
       className={`adsbygoogle${className ? ` ${className}` : ""}`}
-      style={{ display: "block" }}
+      style={{ display: "block", ...(isInArticle ? { textAlign: "center" } : {}) }}
       data-ad-client="ca-pub-8655681325124193"
       data-ad-slot={slot}
       data-ad-format={format}
-      {...(!isAutoRelaxed ? { "data-full-width-responsive": "true" } : {})}
+      {...(layout ? { "data-ad-layout": layout } : {})}
+      {...(!isAutoRelaxed && !isInArticle ? { "data-full-width-responsive": "true" } : {})}
     />
   );
 }

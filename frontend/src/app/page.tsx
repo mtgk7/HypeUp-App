@@ -419,6 +419,11 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* REKLAM — In-article (Neden HypeUp / Nasıl Çalışır arası) */}
+      <div className="max-w-3xl mx-auto px-5 py-4">
+        <AdBanner slot="1936092291" format="fluid" layout="in-article" />
+      </div>
+
       {/* NASIL ÇALIŞIR */}
       <section className="max-w-6xl mx-auto px-5 py-16">
         <div className="mb-10">
