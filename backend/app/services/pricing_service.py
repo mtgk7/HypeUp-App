@@ -183,7 +183,7 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 100000,"max": 5000000,"price_per_1000":  31.5},
     ],
 
-    167: [  # TikTok İzlenme → PRM4U: TikTok Views [100M/D No Drop] (eski: 10019)
+    1840: [  # TikTok İzlenme → PRM4U: TikTok Views [No Refill] (eski: 167 iptal, 10019 geçersiz)
         {"min": 1000,   "max": 2499,   "price_per_1000":   5.85},
         {"min": 2500,   "max": 4999,   "price_per_1000":   5.62},
         {"min": 5000,   "max": 7499,   "price_per_1000":   5.39},
@@ -303,7 +303,7 @@ FEATURED_PACKAGES: List[dict] = [
     {"jap_service_id": 3,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",          "emoji": "❤️", "platform": "Instagram"},
     # TikTok
     {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",            "emoji": "🎵", "platform": "TikTok", "badge": "⭐ En Çok Satan"},
-    {"jap_service_id": 167,  "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",            "emoji": "👁️", "platform": "TikTok"},
+    {"jap_service_id": 1840, "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",            "emoji": "👁️", "platform": "TikTok"},
     # YouTube
     {"jap_service_id": 3110, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",             "emoji": "▶️", "platform": "YouTube", "badge": "🏆 Trend"},
     {"jap_service_id": 4048, "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",           "emoji": "🎬", "platform": "YouTube"},

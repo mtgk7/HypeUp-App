@@ -162,7 +162,7 @@ async def full_sync():
         _SID_NAMES = {
             4908: "IG Türk Takipçi", 4626: "IG Global Takipçi", 3: "IG Beğeni",
             1549: "IG Türk Beğeni",  3110: "YT Abone",           4048: "YT İzlenme",
-            4686: "TikTok Takipçi",  162:  "TikTok Beğeni",      167:  "TikTok İzlenme",
+            4686: "TikTok Takipçi",  162:  "TikTok Beğeni",      1840: "TikTok İzlenme",
             4259: "X Takipçi",       145:  "X Beğeni",
         }
         prm4u_price_map = {
@@ -255,12 +255,19 @@ async def send_daily_summary():
 
 async def check_prm4u_service_ids():
     """
-    ALLOWED_JAP_SERVICE_IDS listesindeki servis ID'lerini PRM4U'da doğrula.
-    Geçersiz ID varsa Telegram'a uyarı gönder.
+    İki kontrol:
+    1. ALLOWED_JAP_SERVICE_IDS'deki ID'leri PRM4U listesinde doğrula.
+    2. Son 7 günde ≥3 iptal + 0 tamamlanan sipariş olan servisleri tespit et.
+    Sorun varsa Telegram'a uyarı gönder.
     """
     from app.services.telegram_service import send_telegram
     from app.routers.services import ALLOWED_JAP_SERVICE_IDS
+    from datetime import datetime, timezone, timedelta
     s = get_settings()
+    db = get_supabase()
+    problems = []
+
+    # 1. PRM4U servis listesi kontrolü
     try:
         async with httpx.AsyncClient(timeout=20) as client:
             r = await client.post(s.PRM4U_API_URL, data={"key": s.PRM4U_API_KEY, "action": "services"})
@@ -269,18 +276,54 @@ async def check_prm4u_service_ids():
         invalid = [sid for sid in ALLOWED_JAP_SERVICE_IDS if sid not in valid_ids]
         if invalid:
             ids_str = ", ".join(str(i) for i in invalid)
-            await send_telegram(
-                f"⚠️ <b>PRM4U Servis ID Uyarısı</b>\n"
-                f"Şu ID'ler artık PRM4U'da bulunamıyor:\n"
-                f"<code>{ids_str}</code>\n\n"
-                f"Siparişler bu servislerde başarısız olur. "
-                f"pricing_service.py ve services.py güncellenmeli!"
+            problems.append(
+                f"🔴 <b>PRM4U Listesinde Olmayan ID'ler:</b> <code>{ids_str}</code>\n"
+                f"   (Liste dışı olsa da çalışabilirler — siparişle doğrula)"
             )
-            logger.warning(f"[PRM4U-IDCheck] Geçersiz servis ID'leri: {invalid}")
+            logger.warning(f"[PRM4U-IDCheck] Liste dışı ID'ler: {invalid}")
         else:
-            logger.info(f"[PRM4U-IDCheck] Tüm {len(ALLOWED_JAP_SERVICE_IDS)} servis ID geçerli.")
+            logger.info(f"[PRM4U-IDCheck] Tüm {len(ALLOWED_JAP_SERVICE_IDS)} ID listede.")
     except Exception as e:
-        logger.error(f"[PRM4U-IDCheck] Hata: {e}")
+        logger.error(f"[PRM4U-IDCheck] Liste çekme hatası: {e}")
+
+    # 2. İptal örüntüsü kontrolü — son 7 günde çok iptal olan servisler
+    try:
+        since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        orders = db.table("orders").select("service_id, status, services(service_name, jap_service_id)") \
+            .gte("created_at", since).execute().data or []
+
+        from collections import defaultdict
+        stats: dict[str, dict] = defaultdict(lambda: {"name": "", "jid": 0, "cancelled": 0, "completed": 0})
+        for o in orders:
+            sid = o.get("service_id", "")
+            svc = o.get("services") or {}
+            stats[sid]["name"] = svc.get("service_name", sid)
+            stats[sid]["jid"] = svc.get("jap_service_id", 0)
+            if o["status"] == "cancelled":
+                stats[sid]["cancelled"] += 1
+            elif o["status"] == "completed":
+                stats[sid]["completed"] += 1
+
+        problem_svcs = [
+            s for s in stats.values()
+            if s["cancelled"] >= 3 and s["completed"] == 0
+        ]
+        if problem_svcs:
+            lines = ["🔴 <b>Sorunlu Servisler (7 gün, ≥3 iptal, 0 tamamlanan):</b>"]
+            for ps in problem_svcs:
+                lines.append(f"  • {ps['name']} (ID {ps['jid']}): {ps['cancelled']} iptal")
+            problems.append("\n".join(lines))
+    except Exception as e:
+        logger.error(f"[PRM4U-IDCheck] İptal kontrolü hatası: {e}")
+
+    # Sorun varsa tek mesajla bildir
+    if problems:
+        await send_telegram(
+            "⚠️ <b>Günlük Servis Sağlık Kontrolü</b>\n\n" + "\n\n".join(problems) +
+            "\n\n📋 pricing_service.py ve services.py güncellenmeli!"
+        )
+    else:
+        logger.info("[PRM4U-IDCheck] Tüm servisler sağlıklı.")
 
 
 async def prm4u_id_check_loop():

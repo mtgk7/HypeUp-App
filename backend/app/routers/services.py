@@ -28,7 +28,7 @@ SERVICE_NAME_OVERRIDES: dict[int, str] = {
     # TikTok
     4686: "TikTok Takipçi",
     162:  "TikTok Beğeni",
-    167:  "TikTok İzlenme",
+    1840: "TikTok İzlenme",
     # YouTube
     3110: "YouTube Abone",
     4048: "YouTube İzlenme",
@@ -155,7 +155,7 @@ ALLOWED_JAP_SERVICE_IDS = [
     4048,   # YouTube İzlenme [Worldwide]
     4686,   # TikTok Takipçi [High Quality]
     162,    # TikTok Beğeni [Photos/Video]
-    167,    # TikTok İzlenme [100M/D No Drop]
+    1840,   # TikTok İzlenme [No Refill] — 167 iptal ediliyor
     4259,   # X (Twitter) Takipçi [10 Ülke Karışık]
     145,    # X (Twitter) Beğeni [5 Ülke Karışık]
 ]
