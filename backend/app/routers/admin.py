@@ -504,7 +504,7 @@ ACTIVE_PLATFORMS = {
 
 def _guess_platform(name: str) -> str:
     n = name.lower()
-    if "instagram" in n:            return "Instagram"
+    if "instagram" in n or "ig " in n: return "Instagram"
     if "tiktok" in n or "tik tok" in n: return "TikTok"
     if "youtube" in n:              return "YouTube"
     if "twitter" in n or "x follow" in n or "x like" in n or "x view" in n or "x retweet" in n: return "X"
@@ -524,3 +524,73 @@ def _guess_platform(name: str) -> str:
     if "shazam" in n:               return "Shazam"
     if "apple" in n or "itunes" in n or "app store" in n: return "Apple"
     return "Diger"
+
+
+# ── Instagram Yönetimi ────────────────────────────────────────────────────────
+
+from pydantic import BaseModel
+from typing import Optional
+from datetime import datetime
+
+class IGPostRequest(BaseModel):
+    image_url: str
+    caption: str
+    scheduled_at: Optional[datetime] = None
+
+
+@router.post("/instagram/post")
+async def ig_post_now(body: IGPostRequest, _admin: dict = Depends(require_admin)):
+    """Hemen Instagram'a post at."""
+    from app.services.instagram_service import post_to_instagram
+    db = get_supabase()
+    try:
+        media_id = await post_to_instagram(body.image_url, body.caption)
+        db.table("instagram_posts").insert({
+            "caption": body.caption,
+            "image_url": body.image_url,
+            "status": "published",
+            "ig_media_id": media_id,
+            "published_at": datetime.utcnow().isoformat(),
+        }).execute()
+        return {"success": True, "media_id": media_id}
+    except Exception as e:
+        db.table("instagram_posts").insert({
+            "caption": body.caption,
+            "image_url": body.image_url,
+            "status": "failed",
+            "error_msg": str(e),
+        }).execute()
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/instagram/schedule")
+async def ig_schedule_post(body: IGPostRequest, _admin: dict = Depends(require_admin)):
+    """Belirli bir zamana post zamanla."""
+    if not body.scheduled_at:
+        raise HTTPException(status_code=400, detail="scheduled_at gerekli")
+    db = get_supabase()
+    row = db.table("instagram_posts").insert({
+        "caption": body.caption,
+        "image_url": body.image_url,
+        "scheduled_at": body.scheduled_at.isoformat(),
+        "status": "pending",
+    }).execute()
+    return {"success": True, "post_id": row.data[0]["id"]}
+
+
+@router.get("/instagram/posts")
+async def ig_list_posts(_admin: dict = Depends(require_admin)):
+    """Tüm Instagram postlarını listele."""
+    db = get_supabase()
+    rows = db.table("instagram_posts").select("*").order("created_at", desc=True).limit(50).execute()
+    return rows.data or []
+
+
+@router.post("/instagram/token/refresh")
+async def ig_refresh_token(_admin: dict = Depends(require_admin)):
+    """Instagram access token'ı yenile."""
+    from app.services.instagram_service import refresh_token
+    new_token = await refresh_token()
+    if new_token:
+        return {"success": True, "message": "Token yenilendi"}
+    raise HTTPException(status_code=500, detail="Token yenilenemedi")

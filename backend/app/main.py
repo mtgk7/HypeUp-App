@@ -381,6 +381,39 @@ async def order_sync_loop():
             await send_telegram(f"🛑 <b>Sipariş Senkronizasyon Hatası</b>\n{str(e)[:300]}")
 
 
+async def instagram_scheduler_loop():
+    """Her 5 dakikada zamanı gelen Instagram postlarını yayınla."""
+    from app.services.instagram_service import post_to_instagram
+    from datetime import datetime, timezone
+    while True:
+        await asyncio.sleep(5 * 60)
+        try:
+            db = get_supabase()
+            now = datetime.now(timezone.utc).isoformat()
+            due = db.table("instagram_posts") \
+                .select("*") \
+                .eq("status", "pending") \
+                .not_.is_("scheduled_at", "null") \
+                .lte("scheduled_at", now) \
+                .execute().data or []
+            for post in due:
+                try:
+                    media_id = await post_to_instagram(post["image_url"], post["caption"])
+                    db.table("instagram_posts").update({
+                        "status": "published",
+                        "ig_media_id": media_id,
+                        "published_at": datetime.now(timezone.utc).isoformat(),
+                    }).eq("id", post["id"]).execute()
+                    logger.info(f"[IGScheduler] Yayınlandı: {post['id']}")
+                except Exception as e:
+                    db.table("instagram_posts").update({
+                        "status": "failed", "error_msg": str(e)
+                    }).eq("id", post["id"]).execute()
+                    logger.error(f"[IGScheduler] Post hatası {post['id']}: {e}")
+        except Exception as e:
+            logger.error(f"[IGScheduler] Döngü hatası: {e}")
+
+
 async def twice_daily_sync_loop():
     """
     Günde 2 kez (12 saatte bir) full sync yap.
@@ -407,6 +440,7 @@ async def lifespan(app: FastAPI):
     task2 = asyncio.create_task(twice_daily_sync_loop())
     task3 = asyncio.create_task(daily_summary_loop())
     task4 = asyncio.create_task(prm4u_id_check_loop())
+    task5 = asyncio.create_task(instagram_scheduler_loop())
 
     yield
 
@@ -414,6 +448,7 @@ async def lifespan(app: FastAPI):
     task2.cancel()
     task3.cancel()
     task4.cancel()
+    task5.cancel()
 
 
 # ──────────────────────────────────────────────
