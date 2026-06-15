@@ -468,6 +468,35 @@ async def cmd_provider(chat_id: str):
 
 # ── Instagram Telegram Akışı ──────────────────────────────────────────────────
 
+async def _generate_caption(img_bytes: bytes) -> str:
+    """Claude ile görseli analiz edip Türkçe Instagram caption üret."""
+    import base64, os
+    import anthropic
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        return "HypeUp ile sosyal medyada hızla büyü! 🚀\n\n#smmpanel #instagram #tiktok #hypeup"
+    client = anthropic.Anthropic(api_key=api_key)
+    b64 = base64.standard_b64encode(img_bytes).decode("utf-8")
+    msg = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=400,
+        messages=[{
+            "role": "user",
+            "content": [
+                {"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": b64}},
+                {"type": "text", "text": (
+                    "Bu görsel HypeUp adlı Türk SMM paneli için bir Instagram postu. "
+                    "Görsele bakarak Türkçe, etkileyici, kısa bir Instagram caption yaz. "
+                    "Emoji kullan, 5-8 adet alakalı Türkçe/İngilizce hashtag ekle. "
+                    "Sonunda 'hypeuppp.vercel.app' linkini ekle. "
+                    "Sadece caption metnini yaz, başka açıklama ekleme."
+                )},
+            ],
+        }],
+    )
+    return msg.content[0].text.strip()
+
+
 async def handle_ig_photo(chat_id: str, message: dict, s):
     """Admin fotoğraf gönderince: Supabase'e yükle → butonlu mesaj gönder."""
     import uuid, httpx
@@ -478,10 +507,6 @@ async def handle_ig_photo(chat_id: str, message: dict, s):
     file_id = photo["file_id"]
     caption = (message.get("caption") or "").strip()
 
-    if not caption:
-        await reply(chat_id, "❌ Lütfen fotoğrafla birlikte caption da gönder (açıklama + hashtagler).")
-        return
-
     try:
         # Telegram'dan dosya yolunu al
         async with httpx.AsyncClient(timeout=30) as client:
@@ -490,6 +515,11 @@ async def handle_ig_photo(chat_id: str, message: dict, s):
             # Dosyayı indir
             img = await client.get(f"https://api.telegram.org/file/bot{s.TELEGRAM_BOT_TOKEN}/{file_path}")
             img_bytes = img.content
+
+        # Caption yoksa Claude ile otomatik üret
+        if not caption:
+            await reply(chat_id, "✍️ Caption üretiliyor...")
+            caption = await _generate_caption(img_bytes)
 
         # Supabase Storage'a yükle
         supabase_url = s.SUPABASE_URL
