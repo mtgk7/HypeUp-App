@@ -381,6 +381,32 @@ async def order_sync_loop():
             await send_telegram(f"🛑 <b>Sipariş Senkronizasyon Hatası</b>\n{str(e)[:300]}")
 
 
+async def instagram_token_refresh_loop():
+    """Her 55 günde Instagram token'ını otomatik yenile."""
+    from app.services.telegram_service import send_telegram
+    import os
+    while True:
+        await asyncio.sleep(55 * 24 * 60 * 60)
+        try:
+            import httpx
+            token = os.getenv("META_IG_TOKEN", "")
+            async with httpx.AsyncClient(timeout=15) as client:
+                r = await client.get(
+                    "https://graph.instagram.com/v21.0/refresh_access_token",
+                    params={"grant_type": "ig_refresh_token", "access_token": token},
+                )
+                data = r.json()
+            if "access_token" in data:
+                new_token = data["access_token"]
+                os.environ["META_IG_TOKEN"] = new_token
+                logger.info(f"[IGToken] Token yenilendi, {data.get('expires_in', 0)//86400} gün geçerli")
+                await send_telegram(f"✅ <b>Instagram Token Yenilendi</b>\nSüre: {data.get('expires_in', 0)//86400} gün\n⚠️ Render env'e manuel güncelle!")
+            else:
+                await send_telegram(f"❌ <b>Instagram Token Yenilenemedi</b>\n{str(data)[:200]}")
+        except Exception as e:
+            logger.error(f"[IGToken] Yenileme hatası: {e}")
+
+
 async def instagram_scheduler_loop():
     """Her 5 dakikada zamanı gelen Instagram postlarını yayınla."""
     from app.services.instagram_service import post_to_instagram
@@ -441,6 +467,7 @@ async def lifespan(app: FastAPI):
     task3 = asyncio.create_task(daily_summary_loop())
     task4 = asyncio.create_task(prm4u_id_check_loop())
     task5 = asyncio.create_task(instagram_scheduler_loop())
+    task6 = asyncio.create_task(instagram_token_refresh_loop())
 
     yield
 
@@ -449,6 +476,7 @@ async def lifespan(app: FastAPI):
     task3.cancel()
     task4.cancel()
     task5.cancel()
+    task6.cancel()
 
 
 # ──────────────────────────────────────────────
