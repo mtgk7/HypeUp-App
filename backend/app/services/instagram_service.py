@@ -39,6 +39,28 @@ async def create_media_container(image_url: str, caption: str) -> str:
         return data["id"]
 
 
+async def wait_until_container_ready(creation_id: str, timeout_s: int = 60, interval_s: int = 3) -> None:
+    """Container işlenene kadar (status_code=FINISHED) bekle, yoksa publish 'Media ID is not available' hatası verir."""
+    import asyncio
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        elapsed = 0
+        while elapsed < timeout_s:
+            r = await client.get(
+                f"{IG_BASE}/{creation_id}",
+                params={"fields": "status_code", "access_token": _token()},
+            )
+            data = r.json()
+            status = data.get("status_code")
+            if status == "FINISHED":
+                return
+            if status == "ERROR":
+                raise ValueError(f"Container işlenirken hata: {data}")
+            await asyncio.sleep(interval_s)
+            elapsed += interval_s
+        logger.warning(f"[IG] Container {creation_id} {timeout_s}s içinde hazır olmadı, yine de yayınlamayı deniyorum.")
+
+
 async def publish_container(creation_id: str) -> str:
     """Adım 2: Container'ı yayınla, media_id döner."""
     async with httpx.AsyncClient(timeout=30) as client:
@@ -59,6 +81,7 @@ async def publish_container(creation_id: str) -> str:
 async def post_to_instagram(image_url: str, caption: str) -> str:
     """Tek adımda image_url + caption ile Instagram'a post at. media_id döner."""
     creation_id = await create_media_container(image_url, caption)
+    await wait_until_container_ready(creation_id)
     media_id = await publish_container(creation_id)
     return media_id
 
