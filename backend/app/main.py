@@ -516,3 +516,16 @@ async def root():
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+@app.get("/health/db")
+async def health_db():
+    """
+    DB'ye gerçekten dokunan keep-alive endpoint'i. /health yalnızca process'in
+    ayakta olduğunu doğrular, Supabase'e dokunmaz — bu da Supabase'in uzun süre
+    etkileşim görmeyince projeyi pause/silmesini (2026-11-14'te yaşandı)
+    engellemiyordu. cron-job.org'dan bunu da pingleyerek DB'yi uyanık tutuyoruz.
+    """
+    db = get_supabase()
+    db.table("settings").select("key").limit(1).execute()
+    return {"status": "ok"}
