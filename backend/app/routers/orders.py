@@ -7,8 +7,8 @@ from app.services.pricing_service import calculate_order_cost, get_tier_price, c
 
 # Kullanıcıya gösterilecek temiz isimler (jap_service_id → görünen ad)
 _ORDER_NAME_MAP: dict[int, str] = {
-    4908: "Instagram Türk Takipçi",
-    4626: "Instagram Yabancı Takipçi",
+    418:  "Instagram Türk Takipçi",
+    469:  "Instagram Yabancı Takipçi",
     3:    "Instagram Beğeni",
     1549: "Instagram Türk Beğeni",
     4686: "TikTok Takipçi",

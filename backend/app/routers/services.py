@@ -21,8 +21,8 @@ PRM4U_KEY = os.getenv("PRM4U_API_KEY", "")
 # Kullanıcıya gösterilecek temiz servis isimleri (jap_service_id → görünen isim)
 SERVICE_NAME_OVERRIDES: dict[int, str] = {
     # Instagram
-    4908: "Instagram Türk Takipçi",
-    4626: "Instagram Yabancı Takipçi",
+    418:  "Instagram Türk Takipçi",
+    469:  "Instagram Yabancı Takipçi",
     3:    "Instagram Beğeni (Genel)",
     1549: "Instagram Türk Beğeni",
     # TikTok
@@ -147,8 +147,8 @@ async def list_featured_packages(response: Response):
 # Gösterilecek servisler — JAP service ID listesi.
 # Buraya eklenen ID'ler sipariş formunda görünür, diğerleri gizlenir.
 ALLOWED_JAP_SERVICE_IDS = [
-    4908,   # Instagram Türk Takipçi [Yenileme 15G]
-    4626,   # Instagram Global Takipçi [Yenileme 30G]
+    418,    # Instagram Türk Takipçi — Instagram Followers [Real User: Refill 180D] (geçici, eski 4908 PRM4U'dan kaldırıldı)
+    469,    # Instagram Global Takipçi — Instagram Followers [Real User: Refill 30D] (geçici, eski 4626 PRM4U'dan kaldırıldı)
     3,      # Instagram Beğeni (Genel)
     1549,   # Instagram Türk Beğeni [Gerçek Kullanıcı: Türkiye]
     3110,   # YouTube Abone [İngilizce Konuşanlar]

@@ -41,25 +41,15 @@ _TIER_FLOOR: dict[int, float] = {}
 # ──────────────────────────────────────────────────────────────
 SERVICE_TIERS: dict[int, List[dict]] = {
 
-    4908: [  # IG Türk Takipçi → PRM4U: Instagram Takipçileri [Yenileme 15G] (eski: 47)
-        {"min": 50,    "max": 74,    "price_per_1000": 2520.0},
-        {"min": 75,    "max": 99,    "price_per_1000": 2160.0},
-        {"min": 100,   "max": 199,   "price_per_1000": 2025.0},
-        {"min": 200,   "max": 299,   "price_per_1000": 1238.0},
-        {"min": 300,   "max": 399,   "price_per_1000": 1350.0},
-        {"min": 400,   "max": 499,   "price_per_1000": 1181.0},
-        {"min": 500,   "max": 749,   "price_per_1000": 1170.0},
-        {"min": 750,   "max": 999,   "price_per_1000":  960.0},
-        {"min": 1000,  "max": 1499,  "price_per_1000":  891.0},
-        {"min": 1500,  "max": 1999,  "price_per_1000":  870.0},
-        {"min": 2000,  "max": 2499,  "price_per_1000":  810.0},
-        {"min": 2500,  "max": 2749,  "price_per_1000":  882.0},
-        {"min": 2750,  "max": 2999,  "price_per_1000":  851.0},
-        {"min": 3000,  "max": 4999,  "price_per_1000":  840.0},
-        {"min": 5000,  "max": 9999,  "price_per_1000":  882.0},
-        {"min": 10000, "max": 19999, "price_per_1000":  882.0},
-        {"min": 20000, "max": 49999, "price_per_1000":  837.0},
-        {"min": 50000, "max": 100000,"price_per_1000":  765.0},
+    # 4908 (eski "IG Türk Takipçi") PRM4U kataloğundan tamamen kaldırıldı
+    # (2026-11-14) — Türkiye'ye özel hiçbir Instagram takipçi servisi şu an
+    # PRM4U'da yok. Kullanıcı kararıyla GEÇİCİ olarak ülke-hedefsiz "Gerçek
+    # Kullanıcı" takipçi servisine (418, Refill 180G garantili) geçirildi.
+    # FEATURED_PACKAGES'teki jap_service_id de 418'e güncellendi. Türk-özel
+    # bir sağlayıcı (bkz. proje notları: MedyaBayim) eklenince buraya geri
+    # dönülmeli.
+    418: [  # Instagram Followers - [Real User: Refill 180D] — eski 4908'in yerine (geçici)
+        {"min": 10, "max": 100000, "price_per_1000": 435.0},
     ],
 
     1549: [  # IG Türk Beğeni → PRM4U: Instagram Beğenileri [Gerçek Kullanıcı: Türkiye]
@@ -71,22 +61,13 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 2500, "max": 5000,  "price_per_1000":  270.0},
     ],
 
-    3: [  # IG Beğeni → PRM4U: Instagram Likes [High Quality | No Drop] (eski: 8216)
-        {"min": 25,    "max": 49,    "price_per_1000":  720.0},
-        {"min": 50,    "max": 99,    "price_per_1000":  630.0},
-        {"min": 100,   "max": 249,   "price_per_1000":  585.0},
-        {"min": 250,   "max": 499,   "price_per_1000":  288.0},
-        {"min": 500,   "max": 749,   "price_per_1000":  243.0},
-        {"min": 750,   "max": 999,   "price_per_1000":  180.0},
-        {"min": 1000,  "max": 1499,  "price_per_1000":  171.0},
-        {"min": 1500,  "max": 2499,  "price_per_1000":  150.0},
-        {"min": 2500,  "max": 4999,  "price_per_1000":  107.6},
-        {"min": 5000,  "max": 9999,  "price_per_1000":   99.0},
-        {"min": 10000, "max": 19999, "price_per_1000":   89.9},
-        {"min": 20000, "max": 49999, "price_per_1000":   78.75},
-        {"min": 50000, "max": 99999, "price_per_1000":   67.5},
-        {"min": 100000,"max": 200000,"price_per_1000":   58.5},
-    ],
+    # 3: IG Beğeni — eski tier tablosu 2026-11-14'te kaldırıldı (bkz. not aşağıda).
+    # PRM4U bu ID'yi zamanla çok daha ucuz bir servise yeniden atamış olmalı:
+    # canlı maliyet $0.20/1000 iken eski tablo 585-720 TL/1000 gibi fiyatlar
+    # veriyordu (maliyetin 60+ katı, rakip panellerden kat kat pahalı).
+    # Artık SERVICE_TIERS'te yok → calculate_hypeup_price() formülüne düşüyor:
+    # $0.20 × kur → ~33.5 TL/1000 (maliyetin ~3.2×'i, rakip panel aralığıyla
+    # (Türk-etiketsiz kaliteli beğeni ~15-50 TL/1000) uyumlu).
 
     5994: [  # IG Reels İzlenme (TakipciBudur Reels İzlenme x0.90)
         {"min": 1000,   "max": 2499,   "price_per_1000":  31.5},
@@ -204,18 +185,12 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 1000000,"max": 10000000,"price_per_1000":  3.12},
     ],
 
-    4626: [  # IG Global Takipçi → PRM4U: Instagram Takipçileri [Yenileme 30G] (eski: 10216)
-        {"min": 100,  "max": 499,  "price_per_1000":  765.0},
-        {"min": 500,  "max": 749,  "price_per_1000":  630.0},
-        {"min": 750,  "max": 999,  "price_per_1000":  570.0},
-        {"min": 1000, "max": 1499, "price_per_1000":  585.0},
-        {"min": 1500, "max": 1999, "price_per_1000":  510.0},
-        {"min": 2000, "max": 2499, "price_per_1000":  427.5},
-        {"min": 2500, "max": 9999, "price_per_1000":  450.0},
-        {"min": 10000,"max": 14999,"price_per_1000":  351.0},
-        {"min": 15000,"max": 19999,"price_per_1000":  384.0},
-        {"min": 20000,"max": 29999,"price_per_1000":  576.0},
-        {"min": 30000,"max": 1000000,"price_per_1000": 540.0},
+    # 4626 (eski "IG Global Takipçi") de PRM4U'dan kaldırıldı — aynı sebep,
+    # aynı geçici çözüm (bkz. 418 üstündeki not). Daha kısa Refill garantili
+    # (30G) ve daha ucuz maliyetli 469'a geçirildi, böylece "Türk" (418) ve
+    # "Global" (469) paketleri arasında anlamlı bir fiyat/garanti farkı kalıyor.
+    469: [  # Instagram Followers - [Real User: Refill 30D] — eski 4626'nın yerine (geçici)
+        {"min": 10, "max": 100000, "price_per_1000": 320.0},
     ],
 
 }
@@ -304,8 +279,8 @@ _QTY_VIEW = [1000, 5000, 10000, 25000, 50000]  # izlenme
 
 FEATURED_PACKAGES: List[dict] = [
     # Instagram
-    {"jap_service_id": 4908, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",   "emoji": "📸", "platform": "Instagram", "badge": "🔥 En Popüler"},
-    {"jap_service_id": 4626, "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
+    {"jap_service_id": 418,  "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Türk Takipçi",   "emoji": "📸", "platform": "Instagram", "badge": "🔥 En Popüler"},
+    {"jap_service_id": 469,  "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Global Takipçi", "emoji": "🌍", "platform": "Instagram"},
     {"jap_service_id": 3,    "default_qty": 1000,  "options": _QTY_STD,  "label": "Instagram Beğeni",          "emoji": "❤️", "platform": "Instagram"},
     # TikTok
     {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",            "emoji": "🎵", "platform": "TikTok", "badge": "⭐ En Çok Satan"},

@@ -187,7 +187,7 @@ async def full_sync():
         # PRM4U fiyatları değişince tier'ların zarar ettirmemesini garantile
         from app.services.pricing_service import apply_margin_floor, SERVICE_TIERS, MIN_MARGIN
         _SID_NAMES = {
-            4908: "IG Türk Takipçi", 4626: "IG Global Takipçi", 3: "IG Beğeni",
+            418: "IG Türk Takipçi", 469: "IG Global Takipçi", 3: "IG Beğeni",
             1549: "IG Türk Beğeni",  3110: "YT Abone",           4048: "YT İzlenme",
             4686: "TikTok Takipçi",  162:  "TikTok Beğeni",      1840: "TikTok İzlenme",
             4259: "X Takipçi",       145:  "X Beğeni",
