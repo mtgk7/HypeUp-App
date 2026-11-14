@@ -140,8 +140,35 @@ async def full_sync():
                 db.table("services").upsert(chunk, on_conflict="jap_service_id").execute()
                 synced += len(chunk)
             except Exception as e:
-                logger.warning(f"[FullSync] Batch hatası: {e}")
-                skipped += len(chunk)
+                # Tek bir satır (ör. sayısal taşma) tüm grubu düşürmesin —
+                # grubu satır satır tekrar dene, sadece gerçekten kötü olan atlanır.
+                logger.warning(f"[FullSync] Batch hatası, satır satır tekrar deneniyor: {e}")
+                for single in chunk:
+                    try:
+                        db.table("services").upsert([single], on_conflict="jap_service_id").execute()
+                        synced += 1
+                    except Exception as row_err:
+                        skipped += 1
+                        skipped_ids.append(single["jap_service_id"])
+                        logger.warning(f"[FullSync] Servis atlandı ({single['jap_service_id']}): {row_err}")
+
+        # Sağlayıcının kataloğundan kaldırdığı servisleri pasif yap
+        # (upsert sadece PRM4U'nun ŞU AN döndürdüğü servisleri günceller —
+        #  artık dönmeyen servisler DB'de "is_active" kalıp sipariş edilebilir
+        #  görünüyordu, ama sağlayıcıda bulunamayıp hata verirdi.)
+        live_ids = {r["jap_service_id"] for r in rows}
+        try:
+            active_resp = db.table("services").select("jap_service_id").eq("is_active", True).execute()
+            stale_ids = [row["jap_service_id"] for row in active_resp.data if row["jap_service_id"] not in live_ids]
+            if stale_ids:
+                STALE_BATCH = 100
+                for i in range(0, len(stale_ids), STALE_BATCH):
+                    db.table("services").update({"is_active": False}).in_(
+                        "jap_service_id", stale_ids[i:i + STALE_BATCH]
+                    ).execute()
+                logger.info(f"[FullSync] Sağlayıcıda artık olmayan {len(stale_ids)} servis pasif yapıldı")
+        except Exception as e:
+            logger.warning(f"[FullSync] Kaldırılmış servis temizliği hatası: {e}")
 
         # Aktif olmayan kategorilerdeki tüm servisleri pasif yap
         inactive_cat_ids = [cat_id for platform, cat_id in platform_to_cat.items() if platform not in ACTIVE_PLATFORMS]
