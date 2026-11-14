@@ -1,11 +1,17 @@
 """
 Dinamik Kâr Marjı Motoru
 ────────────────────────
-Kural: 1000 adet TL maliyeti baz alınır. Minimum taban fiyat: 5 TL/1000.
+Gerçek formül calculate_hypeup_price()'ta tanımlı (bu modül içinde, aşağıda).
+Kademeli çarpan, RATE_BASELINE kurunda taban maliyete uygulanır, sonuç güncel
+kura orantılanır:
 
-  < 1 TL   → maks(maliyet × 30, 5 TL)   (izlenme/beğeni — taban fiyat garantisi)
-  1–20 TL  → maliyet × 5                 (%400 kâr)
-  > 20 TL  → maliyet × 4                 (%300 kâr)
+  < 3 TL   × 5.0   (izlenme/traffic)
+  3–15 TL  × 3.2
+  15–30 TL × 1.75
+  30–80 TL × 3.90
+  > 80 TL  × 5.0
+
+Taban: MIN_PRICE_TL = 5 TL/1000.
 """
 
 from app.services.currency_service import get_current_rate
