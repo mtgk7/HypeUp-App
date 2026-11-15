@@ -10,17 +10,29 @@ Komutlar:
   /broadcast <mesaj>         — Tüm kullanıcılara bildirim gönder
 """
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException
 from app.database import get_supabase
 from app.config import get_settings
 from app.services.telegram_service import send_telegram, answer_callback, edit_telegram_message
 from app.routers.notifications import create_notification
 from datetime import datetime, timezone, timedelta
+import hashlib
 import httpx
 import logging
 
 router = APIRouter(prefix="/telegram", tags=["Telegram Bot"])
 logger = logging.getLogger(__name__)
+
+
+def _webhook_secret(s) -> str:
+    """
+    Telegram'ın setWebhook'a verdiğimiz secret_token'ı her çağrıda
+    X-Telegram-Bot-Api-Secret-Token header'ıyla geri gönderir — bu sayede
+    webhook'u gerçekten Telegram'ın çağırdığını doğrularız (chat_id tek başına
+    güvenilir değil, request body'de attacker tarafından istenen değere set edilebilir).
+    Bot token'dan deterministik türetilir, yeni bir .env değeri gerekmez.
+    """
+    return hashlib.sha256(f"hypeup-webhook-v1-{s.TELEGRAM_BOT_TOKEN}".encode()).hexdigest()[:32]
 
 # Zamanlama bekleme durumu: chat_id → {image_url, caption}
 _pending_schedule: dict[str, dict] = {}
@@ -49,7 +61,11 @@ async def setup_webhook():
     async with httpx.AsyncClient(timeout=10) as client:
         r = await client.post(
             f"https://api.telegram.org/bot{s.TELEGRAM_BOT_TOKEN}/setWebhook",
-            json={"url": webhook_url, "allowed_updates": ["message", "callback_query"]},
+            json={
+                "url": webhook_url,
+                "allowed_updates": ["message", "callback_query"],
+                "secret_token": _webhook_secret(s),
+            },
         )
         return r.json()
 
@@ -60,6 +76,9 @@ async def setup_webhook():
 @router.post("/webhook")
 async def telegram_webhook(request: Request):
     s = get_settings()
+    if request.headers.get("x-telegram-bot-api-secret-token") != _webhook_secret(s):
+        logger.warning("[TelegramWebhook] Geçersiz secret token — istek Telegram'dan değil, reddedildi.")
+        raise HTTPException(status_code=403, detail="Forbidden")
     try:
         data = await request.json()
     except Exception:

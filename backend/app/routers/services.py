@@ -5,7 +5,7 @@ from app.database import get_supabase_client
 from app.services.pricing_service import hesapla_hypeup_satis_fiyati, get_tier_price, FEATURED_PACKAGES
 from app.services.jap_service import JustAnotherPanelClient
 from app.models.schemas import ServicePriceQuery, ServicePriceResponse
-from app.utils.auth import get_current_user
+from app.utils.auth import get_current_user, require_admin
 from app.services.currency_service import get_current_rate
 from app.services.pricing_service import calculate_order_cost
 import os
@@ -273,7 +273,7 @@ async def calculate_price(
 
 # --- 3. ADMIN İÇİN TOPTANCI (JAP) FİYATLARINI SENKRONİZE ETME ---
 @router.post("/sync-from-provider", status_code=status.HTTP_200_OK)
-async def sync_services_from_provider():
+async def sync_services_from_provider(_admin: dict = Depends(require_admin)):
     """
     Sadece Adminin tetikleyeceği, JAP API'sinden güncel dolar maliyetlerini çekip
     HypeUp veritabanındaki tüm TL satış fiyatlarını anlık kurla yeniden hesaplayan modül.

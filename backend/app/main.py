@@ -1,9 +1,21 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from contextlib import asynccontextmanager
 import asyncio
 import logging
 import httpx
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), camera=(), microphone=()"
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        return response
 
 from app.config import get_settings
 from app.routers import auth, services, orders, admin, payment, notifications, telegram_bot
@@ -510,13 +522,23 @@ async def lifespan(app: FastAPI):
 # App
 # ──────────────────────────────────────────────
 s = get_settings()
+# Sadece APP_ENV="development" ile açık kalsın (whitelist) — Render'da APP_ENV
+# yanlış/eksik set edilirse "production" string eşleşmesine güvenmek yerine
+# varsayılan olarak KAPALI kalması daha güvenli (şu an canlıda /docs herkese
+# açıktı, tüm admin/webhook endpoint yüzeyini dışarıya sunuyordu).
+_docs_enabled = s.APP_ENV == "development"
 
 app = FastAPI(
     title="HypeUp SMM Panel API",
     version="1.0.0",
     description="Otomatik kâr marjlı SMM Panel Backend",
     lifespan=lifespan,
+    docs_url="/docs" if _docs_enabled else None,
+    redoc_url="/redoc" if _docs_enabled else None,
+    openapi_url="/openapi.json" if _docs_enabled else None,
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from app.models.schemas import RegisterRequest, LoginRequest, TokenResponse, UserOut
 from app.database import get_supabase
 from app.utils.auth import hash_password, verify_password, create_token, get_current_user
+from app.utils.rate_limit import rate_limit
 from app.config import get_settings
 from app.routers.notifications import create_notification
 from app.services.telegram_service import send_telegram
@@ -16,7 +17,10 @@ class ChangePasswordRequest(BaseModel):
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+@router.post(
+    "/register", response_model=TokenResponse, status_code=201,
+    dependencies=[Depends(rate_limit("register", max_requests=5, window_seconds=60))],
+)
 async def register(body: RegisterRequest):
     db = get_supabase()
     s = get_settings()
@@ -85,7 +89,10 @@ async def register(body: RegisterRequest):
     )
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post(
+    "/login", response_model=TokenResponse,
+    dependencies=[Depends(rate_limit("login", max_requests=10, window_seconds=60))],
+)
 async def login(body: LoginRequest):
     db = get_supabase()
 
@@ -112,7 +119,10 @@ async def login(body: LoginRequest):
     )
 
 
-@router.patch("/change-password")
+@router.patch(
+    "/change-password",
+    dependencies=[Depends(rate_limit("change-password", max_requests=10, window_seconds=60))],
+)
 async def change_password(body: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
     db = get_supabase()
     if not verify_password(body.old_password, current_user["password_hash"]):

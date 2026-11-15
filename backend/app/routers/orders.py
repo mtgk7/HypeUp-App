@@ -64,16 +64,29 @@ async def create_order(body: OrderCreateRequest, user: dict = Depends(get_curren
     cost_dolar = costs["cost_dolar"]
 
     # 4. Bakiye yeterli mi?
-    user_balance = float(user["balance"])
+    raw_balance = user["balance"]
+    user_balance = float(raw_balance)
     if user_balance < charge_tl:
         raise HTTPException(
             status_code=402,
             detail=f"Yetersiz bakiye. Gereken: {charge_tl:.2f} TL, Mevcut: {user_balance:.2f} TL"
         )
 
-    # 5. Bakiyeyi düş
+    # 5. Bakiyeyi düş — eşzamanlı isteklerde çift düşüşü önlemek için
+    # bakiyeyi okuduğumuz değerle eşleşiyorsa güncelle (optimistic lock).
     new_balance = round(user_balance - charge_tl, 4)
-    db.table("users").update({"balance": new_balance}).eq("id", user["id"]).execute()
+    lock_result = (
+        db.table("users")
+        .update({"balance": new_balance})
+        .eq("id", user["id"])
+        .eq("balance", raw_balance)
+        .execute()
+    )
+    if not lock_result.data:
+        raise HTTPException(
+            status_code=409,
+            detail="Bakiyen bu sırada değişti, lütfen tekrar dene."
+        )
 
     # 6. Siparişi DB'ye pending olarak kaydet
     order_insert = db.table("orders").insert({

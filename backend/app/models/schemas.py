@@ -94,8 +94,8 @@ class ServicePriceResponse(BaseModel):
 
 class OrderCreateRequest(BaseModel):
     service_id: str
-    target_link: str = Field(min_length=5)
-    quantity: int = Field(gt=0)
+    target_link: str = Field(min_length=5, max_length=500)
+    quantity: int = Field(gt=0, le=10_000_000)
 
 
 class OrderOut(BaseModel):
@@ -148,7 +148,7 @@ class PaymentTransactionOut(BaseModel):
 
 class ManualPaymentRequest(BaseModel):
     amount: float
-    sender_name: str
+    sender_name: str = Field(min_length=1, max_length=100)
 
 
 # ──────────────────────────────────────────────

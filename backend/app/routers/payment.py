@@ -4,6 +4,7 @@ from app.database import get_supabase
 from app.utils.auth import get_current_user
 from app.routers.notifications import create_notification
 from app.services.telegram_service import send_telegram, send_telegram_with_buttons
+import html
 import uuid
 import logging
 
@@ -38,14 +39,19 @@ async def create_manual_payment(body: ManualPaymentRequest, user: dict = Depends
     tx_id = db.table("payment_transactions").select("id").eq("platform_order_id", ref).limit(1).execute()
     tx_db_id = tx_id.data[0]["id"] if tx_id.data else ref
 
+    # Telegram parse_mode=HTML kullanıyor — kullanıcıdan gelen serbest metni
+    # (sender_name) kaçışsız basmak admin sohbetine HTML/link enjekte etmeye açardı.
+    safe_sender = html.escape(body.sender_name)
+    safe_email = html.escape(user["email"])
+
     big = "⚠️ <b>BÜYÜK ÖDEME</b>\n" if body.amount >= 500 else ""
     await send_telegram_with_buttons(
         big +
         f"💳 <b>Yeni Ödeme Bildirimi</b>\n"
-        f"👤 {user['email']}\n"
+        f"👤 {safe_email}\n"
         f"💰 ₺{body.amount:.2f}\n"
         f"🔑 Ref: <code>{ref}</code>\n"
-        f"📝 Gönderici: {body.sender_name}",
+        f"📝 Gönderici: {safe_sender}",
         buttons=[[
             {"text": "✅ Onayla",  "callback_data": f"approve_payment_{tx_db_id}"},
             {"text": "❌ Reddet",  "callback_data": f"reject_payment_{tx_db_id}"},
