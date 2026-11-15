@@ -49,7 +49,9 @@ SERVICE_TIERS: dict[int, List[dict]] = {
     # bir sağlayıcı (bkz. proje notları: MedyaBayim) eklenince buraya geri
     # dönülmeli.
     418: [  # Instagram Followers - [Real User: Refill 180D] — eski 4908'in yerine (geçici)
-        {"min": 10, "max": 100000, "price_per_1000": 435.0},
+        # Rakip kıyaslaması (2026-11-15, Bayigram "Türk Takipçi" 505,75 TL/1000,
+        # -%10 konumlandırma): baseline 412,77 -> güncel kurda ~455 TL/1000.
+        {"min": 10, "max": 100000, "price_per_1000": 412.77},
     ],
 
     1549: [  # IG Türk Beğeni → PRM4U: Instagram Beğenileri [Gerçek Kullanıcı: Türkiye]
@@ -61,13 +63,14 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 2500, "max": 5000,  "price_per_1000":  270.0},
     ],
 
-    # 3: IG Beğeni — eski tier tablosu 2026-11-14'te kaldırıldı (bkz. not aşağıda).
-    # PRM4U bu ID'yi zamanla çok daha ucuz bir servise yeniden atamış olmalı:
-    # canlı maliyet $0.20/1000 iken eski tablo 585-720 TL/1000 gibi fiyatlar
-    # veriyordu (maliyetin 60+ katı, rakip panellerden kat kat pahalı).
-    # Artık SERVICE_TIERS'te yok → calculate_hypeup_price() formülüne düşüyor:
-    # $0.20 × kur → ~33.5 TL/1000 (maliyetin ~3.2×'i, rakip panel aralığıyla
-    # (Türk-etiketsiz kaliteli beğeni ~15-50 TL/1000) uyumlu).
+    3: [  # IG Beğeni → PRM4U: Instagram Likes [High Quality | No Drop]
+        # Rakip kıyaslaması (2026-11-15, Bayigram "Türk Beğeni" favori paket
+        # 142,84 TL/1000, -%8 konumlandırma): baseline 119,17 -> ~131,4 TL/1000
+        # güncel kurda. Maliyetin (~₺10,48/1000) ~12,5×'i — beğeni kategorisinde
+        # piyasa fiyatı ham maliyetten çok daha yüksek seyrediyor (bkz. proje
+        # notları), formülün genel bandı (×3.2) bu kategoriye uymuyordu.
+        {"min": 10, "max": 1000000, "price_per_1000": 119.17},
+    ],
 
     5994: [  # IG Reels İzlenme (TakipciBudur Reels İzlenme x0.90)
         {"min": 1000,   "max": 2499,   "price_per_1000":  31.5},
@@ -84,50 +87,26 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 1000000,"max": 5000000,"price_per_1000":   1.8},
     ],
 
-    3110: [  # YouTube Abone → PRM4U: YouTube Aboneleri [İngilizce] (eski: 3519)
-        {"min": 50,    "max": 99,    "price_per_1000": 1467.0},
-        {"min": 100,   "max": 249,   "price_per_1000": 1422.0},
-        {"min": 250,   "max": 499,   "price_per_1000": 1397.0},
-        {"min": 500,   "max": 749,   "price_per_1000": 1379.0},
-        {"min": 750,   "max": 999,   "price_per_1000": 1350.0},
-        {"min": 1000,  "max": 2499,  "price_per_1000": 1308.6},
-        {"min": 2500,  "max": 4999,  "price_per_1000": 1255.7},
-        {"min": 5000,  "max": 7499,  "price_per_1000": 1220.6},
-        {"min": 7500,  "max": 9999,  "price_per_1000": 1185.4},
-        {"min": 10000, "max": 24999, "price_per_1000": 1150.1},
-        {"min": 25000, "max": 49999, "price_per_1000": 1114.9},
-        {"min": 50000, "max": 74999, "price_per_1000": 1079.7},
-        {"min": 75000, "max": 99999, "price_per_1000": 1044.5},
-        {"min": 100000,"max": 500000,"price_per_1000": 1009.3},
+    # 3110 (eski "YouTube Abone") de PRM4U'dan kaldırılmış (2026-11-15,
+    # Instagram Takipçi'yle aynı desen) — 1588'e geçirildi (YouTube Subscribers
+    # [Real User: Refill 30D], $10.00/1000 — eski 3110 ile BİREBİR AYNI maliyet,
+    # fiyat/marj hesabı değişmedi).
+    1588: [  # YouTube Abone → PRM4U: YouTube Subscribers [Real User: Refill 30D] (eski 3110'un yerine)
+        # Rakip kıyaslaması (2026-11-15, Bayigram favori paket 2.128 TL/1000,
+        # -%8 konumlandırma): baseline 1775,36 -> ~1.957,76 TL/1000 güncel kur.
+        {"min": 50, "max": 500000, "price_per_1000": 1775.36},
     ],
 
-    4048: [  # YouTube İzlenme → PRM4U: YouTube Views [Worldwide] (eski: 7533)
-        {"min": 100,   "max": 249,   "price_per_1000":  81.0},
-        {"min": 250,   "max": 499,   "price_per_1000":  79.2},
-        {"min": 500,   "max": 749,   "price_per_1000":  77.5},
-        {"min": 750,   "max": 999,   "price_per_1000":  75.7},
-        {"min": 1000,  "max": 2499,  "price_per_1000":  74.0},
-        {"min": 2500,  "max": 4999,  "price_per_1000":  72.3},
-        {"min": 5000,  "max": 7499,  "price_per_1000":  70.6},
-        {"min": 7500,  "max": 9999,  "price_per_1000":  68.8},
-        {"min": 10000, "max": 24999, "price_per_1000":  67.1},
-        {"min": 25000, "max": 49999, "price_per_1000":  65.4},
-        {"min": 50000, "max": 74999, "price_per_1000":  63.6},
-        {"min": 75000, "max": 99999, "price_per_1000":  61.9},
-        {"min": 100000,"max": 300000,"price_per_1000":  60.2},
+    4048: [  # YouTube İzlenme → PRM4U: YouTube Views [Worldwide]
+        # Rakip kıyaslaması (2026-11-15, Bayigram favori paket 784,47 TL/10.000,
+        # +%5 konumlandırma): baseline 74,70 -> ~82,37 TL/1000 güncel kur.
+        {"min": 100, "max": 300000, "price_per_1000": 74.70},
     ],
 
-    4259: [  # X Takipçi → PRM4U: Twitter Takipçileri [10 Ülke] (eski: 8695)
-        {"min": 100,  "max": 249,   "price_per_1000":  792.0},
-        {"min": 250,  "max": 499,   "price_per_1000":  651.6},
-        {"min": 500,  "max": 749,   "price_per_1000":  646.2},
-        {"min": 750,  "max": 999,   "price_per_1000":  670.8},
-        {"min": 1000, "max": 2499,  "price_per_1000":  621.9},
-        {"min": 2500, "max": 4999,  "price_per_1000":  641.5},
-        {"min": 5000, "max": 7499,  "price_per_1000":  603.0},
-        {"min": 7500, "max": 9999,  "price_per_1000":  582.0},
-        {"min": 10000,"max": 24999, "price_per_1000":  570.6},
-        {"min": 25000,"max": 50000, "price_per_1000":  555.3},
+    4259: [  # X Takipçi → PRM4U: Twitter Takipçileri [10 Ülke]
+        # Rakip kıyaslaması (2026-11-15, Bayigram favori paket 766,36 TL/1000,
+        # -%7 konumlandırma): baseline 646,32 -> ~712,72 TL/1000 güncel kur.
+        {"min": 100, "max": 50000, "price_per_1000": 646.32},
     ],
 
     145: [  # X Beğeni → PRM4U: Twitter Beğenileri [5 Ülke] (eski: 9393)
@@ -140,49 +119,28 @@ SERVICE_TIERS: dict[int, List[dict]] = {
         {"min": 5000, "max": 10000,"price_per_1000":  455.4},
     ],
 
-    4686: [  # TikTok Takipçi → PRM4U: TikTok Followers [High Quality] (eski: 10055)
-        # Maliyet: $5.00 × 47.5 = ₺237.5/1000 — minimum %30 marj → ₺309/1000
-        # PRM4U max = 50,000
-        {"min": 50,    "max": 99,    "price_per_1000":  414.0},
-        {"min": 100,   "max": 249,   "price_per_1000":  382.5},
-        {"min": 250,   "max": 499,   "price_per_1000":  356.4},
-        {"min": 500,   "max": 749,   "price_per_1000":  340.2},
-        {"min": 750,   "max": 999,   "price_per_1000":  309.0},
-        {"min": 1000,  "max": 2499,  "price_per_1000":  309.0},
-        {"min": 2500,  "max": 4999,  "price_per_1000":  309.0},
-        {"min": 5000,  "max": 9999,  "price_per_1000":  309.0},
-        {"min": 10000, "max": 24999, "price_per_1000":  309.0},
-        {"min": 25000, "max": 50000, "price_per_1000":  309.0},
+    4686: [  # TikTok Takipçi → PRM4U: TikTok Followers [High Quality]
+        # Rakip kıyaslaması (2026-11-15, Bayigram favori paket 494 TL/1000,
+        # +%5 konumlandırma): baseline 470,38 -> ~518,70 TL/1000 güncel kur.
+        {"min": 50, "max": 50000, "price_per_1000": 470.38},
     ],
 
-    162: [  # TikTok Beğeni → PRM4U: TikTok Likes [Photos/Video] (eski: 10023)
-        {"min": 100,   "max": 249,   "price_per_1000":   81.0},
-        {"min": 250,   "max": 499,   "price_per_1000":   79.2},
-        {"min": 500,   "max": 749,   "price_per_1000":   76.5},
-        {"min": 750,   "max": 999,   "price_per_1000":   72.0},
-        {"min": 1000,  "max": 2499,  "price_per_1000":   63.0},
-        {"min": 2500,  "max": 4999,  "price_per_1000":   59.4},
-        {"min": 5000,  "max": 7499,  "price_per_1000":   53.8},
-        {"min": 7500,  "max": 9999,  "price_per_1000":   51.0},
-        {"min": 10000, "max": 24999, "price_per_1000":   47.25},
-        {"min": 25000, "max": 49999, "price_per_1000":   45.0},
-        {"min": 50000, "max": 99999, "price_per_1000":   43.2},
-        {"min": 100000,"max": 5000000,"price_per_1000":  31.5},
+    # 162 (eski "TikTok Beğeni") de PRM4U'dan kaldırılmış (2026-11-15, aynı desen)
+    # — 163'e geçirildi (TikTok Likes [Real User: Refill 30D], $3.00/1000).
+    # ⚠️ Bayigram'ın favori paketi (85 TL/1000) muhtemelen ucuz bot kaynaklı —
+    # bizim maliyetimizin (₺157,14/1000) ALTINDA, o yüzden karşılaştırma onların
+    # "Organic"/gerçek-kullanıcı tier'ına (~340 TL/1000) göre yapıldı, standart
+    # ucuz tier'a göre DEĞİL. Marj burada diğer kategorilerden daha düşük (~2x),
+    # kullanıcıya bildirildi.
+    163: [  # TikTok Beğeni → PRM4U: TikTok Likes [Real User: Refill 30D] (eski 162'nin yerine)
+        # -%8 konumlandırma (Bayigram Organic ~340 TL): baseline 283,68 -> ~312,8 TL/1000 güncel kur.
+        {"min": 1, "max": 100000, "price_per_1000": 283.68},
     ],
 
-    1840: [  # TikTok İzlenme → PRM4U: TikTok Views [No Refill] (eski: 167 iptal, 10019 geçersiz)
-        {"min": 1000,   "max": 2499,   "price_per_1000":   5.85},
-        {"min": 2500,   "max": 4999,   "price_per_1000":   5.62},
-        {"min": 5000,   "max": 7499,   "price_per_1000":   5.39},
-        {"min": 7500,   "max": 9999,   "price_per_1000":   5.17},
-        {"min": 10000,  "max": 24999,  "price_per_1000":   4.94},
-        {"min": 25000,  "max": 49999,  "price_per_1000":   4.71},
-        {"min": 50000,  "max": 99999,  "price_per_1000":   4.49},
-        {"min": 100000, "max": 249999, "price_per_1000":   4.03},
-        {"min": 250000, "max": 499999, "price_per_1000":   3.81},
-        {"min": 500000, "max": 749999, "price_per_1000":   3.58},
-        {"min": 750000, "max": 999999, "price_per_1000":   3.35},
-        {"min": 1000000,"max": 10000000,"price_per_1000":  3.12},
+    1840: [  # TikTok İzlenme → PRM4U: TikTok Views [No Refill]
+        # Rakip kıyaslaması (2026-11-15, Bayigram favori paket 62,45 TL/10.000,
+        # +%8 konumlandırma): baseline 6,12 -> ~6,75 TL/1000 güncel kur.
+        {"min": 1000, "max": 10000000, "price_per_1000": 6.12},
     ],
 
     # 4626 (eski "IG Global Takipçi") de PRM4U'dan kaldırıldı — aynı sebep,
@@ -190,7 +148,10 @@ SERVICE_TIERS: dict[int, List[dict]] = {
     # (30G) ve daha ucuz maliyetli 469'a geçirildi, böylece "Türk" (418) ve
     # "Global" (469) paketleri arasında anlamlı bir fiyat/garanti farkı kalıyor.
     469: [  # Instagram Followers - [Real User: Refill 30D] — eski 4626'nın yerine (geçici)
-        {"min": 10, "max": 100000, "price_per_1000": 320.0},
+        # 418'in (Türk Takipçi) %70'i olarak konumlandırıldı (2026-11-15) —
+        # Bayigram'da doğrudan "yabancı/global takipçi" karşılığı yok.
+        # baseline 288,94 -> ~318,6 TL/1000 güncel kur.
+        {"min": 10, "max": 100000, "price_per_1000": 288.94},
     ],
 
 }
@@ -286,7 +247,7 @@ FEATURED_PACKAGES: List[dict] = [
     {"jap_service_id": 4686, "default_qty": 1000,  "options": _QTY_STD,  "label": "TikTok Takipçi",            "emoji": "🎵", "platform": "TikTok", "badge": "⭐ En Çok Satan"},
     {"jap_service_id": 1840, "default_qty": 10000, "options": _QTY_VIEW, "label": "TikTok İzlenme",            "emoji": "👁️", "platform": "TikTok"},
     # YouTube
-    {"jap_service_id": 3110, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",             "emoji": "▶️", "platform": "YouTube", "badge": "🏆 Trend"},
+    {"jap_service_id": 1588, "default_qty": 250,   "options": _QTY_STD,  "label": "YouTube Abone",             "emoji": "▶️", "platform": "YouTube", "badge": "🏆 Trend"},
     {"jap_service_id": 4048, "default_qty": 10000, "options": _QTY_VIEW, "label": "YouTube İzlenme",           "emoji": "🎬", "platform": "YouTube"},
     # X
     {"jap_service_id": 4259, "default_qty": 1000,  "options": _QTY_STD,  "label": "X Takipçi",                 "emoji": "✖️", "platform": "X"},

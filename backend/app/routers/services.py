@@ -27,10 +27,10 @@ SERVICE_NAME_OVERRIDES: dict[int, str] = {
     1549: "Instagram Türk Beğeni",
     # TikTok
     4686: "TikTok Takipçi",
-    162:  "TikTok Beğeni",
+    163:  "TikTok Beğeni",
     1840: "TikTok İzlenme",
     # YouTube
-    3110: "YouTube Abone",
+    1588: "YouTube Abone",
     4048: "YouTube İzlenme",
     # X (Twitter)
     4259: "X Takipçi",
@@ -151,10 +151,10 @@ ALLOWED_JAP_SERVICE_IDS = [
     469,    # Instagram Global Takipçi — Instagram Followers [Real User: Refill 30D] (geçici, eski 4626 PRM4U'dan kaldırıldı)
     3,      # Instagram Beğeni (Genel)
     1549,   # Instagram Türk Beğeni [Gerçek Kullanıcı: Türkiye]
-    3110,   # YouTube Abone [İngilizce Konuşanlar]
+    1588,   # YouTube Abone — YouTube Subscribers [Real User: Refill 30D] (geçici, eski 3110 PRM4U'dan kaldırıldı)
     4048,   # YouTube İzlenme [Worldwide]
     4686,   # TikTok Takipçi [High Quality]
-    162,    # TikTok Beğeni [Photos/Video]
+    163,    # TikTok Beğeni — TikTok Likes [Real User: Refill 30D] (geçici, eski 162 PRM4U'dan kaldırıldı)
     1840,   # TikTok İzlenme [No Refill] — 167 iptal ediliyor
     4259,   # X (Twitter) Takipçi [10 Ülke Karışık]
     145,    # X (Twitter) Beğeni [5 Ülke Karışık]
